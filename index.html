@@ -1891,7 +1891,10 @@ function labelOutcome(genes, hetCerts) {
       } else if (cid === 'albino') {
         if (!a && !b) {
         } else if (!a || !b) {
-          hets.push({label: `Het ${GENES[a||b].name}`, cls: 'het'});
+          const gid = a||b;
+          const cert = hetCerts[gid];
+          const prefix = cert ? `${cert} ` : '';
+          hets.push({label: `${prefix}Het ${GENES[gid].name}`, cls: 'het'});
         } else if (a === b) {
           visuals.push({label: `Visual ${GENES[a].name}`, cls: 'visual'});
           if (GENES[a].health) flags.push(GENES[a].health);
@@ -1903,7 +1906,10 @@ function labelOutcome(genes, hetCerts) {
         if (!a && !b) {
           // no alleles
         } else if (!a || !b) {
-          hets.push({label: `Het ${GENES[a||b].name}`, cls: 'het'});
+          const gid = a||b;
+          const cert = hetCerts[gid];
+          const prefix = cert ? `${cert} ` : '';
+          hets.push({label: `${prefix}Het ${GENES[gid].name}`, cls: 'het'});
         } else if (a === b) {
           visuals.push({label: `Visual ${GENES[a].name}`, cls: 'visual'});
         } else {
@@ -1914,7 +1920,10 @@ function labelOutcome(genes, hetCerts) {
         if (!a && !b) {
           // no alleles
         } else if (!a || !b) {
-          hets.push({label: `Het ${GENES[a||b].name}`, cls: 'het'});
+          const gid = a||b;
+          const cert = hetCerts[gid];
+          const prefix = cert ? `${cert} ` : '';
+          hets.push({label: `${prefix}Het ${GENES[gid].name}`, cls: 'het'});
         } else if (a === b) {
           visuals.push({label: `Visual ${GENES[a].name}`, cls: 'visual'});
           if (GENES[a].health) flags.push(GENES[a].health);
