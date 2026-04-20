@@ -140,13 +140,36 @@ body {
   transition: border-color 0.3s;
 }
 .parent-card.flash { border-color: var(--accent) !important; }
+.parent-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
 .parent-card h2 {
   font-size: 12px;
   font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 14px;
+  margin-bottom: 0;
+}
+.btn-clear-parent {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  transition: all 0.15s;
+  letter-spacing: 0.3px;
+}
+.btn-clear-parent:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(224,80,80,.08);
 }
 .gene-picker {
   display: grid;
@@ -227,6 +250,27 @@ option { background: #21262d; }
 .calc-row {
   text-align: center;
   margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.btn-reset-all {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 14px 22px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-reset-all:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(224,80,80,.08);
 }
 .btn-calc {
   background: linear-gradient(135deg, var(--accent-dim), var(--accent));
@@ -972,7 +1016,10 @@ option { background: #21262d; }
 <!-- ── PARENTS ──────────────────────────────────────────────────────────── -->
 <div class="parents-grid">
   <div class="parent-card" id="p1card">
-    <h2>🐍 Parent 1</h2>
+    <div class="parent-card-header">
+      <h2>🐍 Parent 1</h2>
+      <button class="btn-clear-parent" onclick="clearParent(1)" title="Clear Parent 1">✕ Clear</button>
+    </div>
     <div class="gene-picker">
       <div class="typeahead-wrap">
         <input class="ta-input" id="ta-input-1" type="text" placeholder="Search genes…" autocomplete="off">
@@ -990,7 +1037,10 @@ option { background: #21262d; }
   <div class="vs-col">×</div>
 
   <div class="parent-card" id="p2card">
-    <h2>🐍 Parent 2</h2>
+    <div class="parent-card-header">
+      <h2>🐍 Parent 2</h2>
+      <button class="btn-clear-parent" onclick="clearParent(2)" title="Clear Parent 2">✕ Clear</button>
+    </div>
     <div class="gene-picker">
       <div class="typeahead-wrap">
         <input class="ta-input" id="ta-input-2" type="text" placeholder="Search genes…" autocomplete="off">
@@ -1008,6 +1058,7 @@ option { background: #21262d; }
 
 <div class="calc-row">
   <button class="btn-calc" onclick="runCalc()">🧬 Calculate Offspring Probabilities</button>
+  <button class="btn-reset-all" onclick="resetAll()" title="Clear both parents and results">↺ Reset All</button>
 </div>
 
 <!-- ── RESULTS ──────────────────────────────────────────────────────────── -->
@@ -2156,6 +2207,28 @@ function simulateClutch() {
 /* ═══════════════════════════════════════════════════════════════════
    QUICK EXAMPLES
 ═══════════════════════════════════════════════════════════════════ */
+function clearParent(p) {
+  parents[p] = {};
+  renderTags(p);
+  document.getElementById(`ta-input-${p}`).value = '';
+}
+
+function resetAll() {
+  parents[1] = {}; parents[2] = {};
+  renderTags(1); renderTags(2);
+  document.getElementById('ta-input-1').value = '';
+  document.getElementById('ta-input-2').value = '';
+  // Clear results panel back to empty state
+  document.getElementById('results').innerHTML = `
+    <div class="empty-state">
+      <div class="mascot">🧬</div>
+      <p>Select genes for both parents, then click <strong>Calculate</strong>.</p>
+      <p class="hint">Tip — try a Quick Example above to see the calculator in action.</p>
+    </div>`;
+  document.getElementById('clutch-panel').classList.remove('visible');
+  document.getElementById('clutch-results').innerHTML = '';
+}
+
 function loadExample(key) {
   // Clear
   parents[1] = {}; parents[2] = {};
