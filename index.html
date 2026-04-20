@@ -1,0 +1,2326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦎 Mendel — Ball Python Genetics Calculator</title>
+<style>
+:root {
+  /* ── Mendel palette — matched to electric blue gecko avatar ── */
+  --bg:           #0a0f18;   /* deep night navy                  */
+  --surface:      #111824;   /* card surface                     */
+  --surface2:     #192133;   /* input / inner surface            */
+  --border:       #1e3050;   /* subtle blue-steel border         */
+  --text:         #ddeeff;   /* cool white (lab coat)            */
+  --muted:        #7a9bbf;   /* blue-grey (belly scales)         */
+  --accent:       #32c8e0;   /* electric cyan (gecko body)       */
+  --accent-dim:   #1a8fa3;   /* deeper cyan for buttons          */
+  --accent-bright:#7eeeff;   /* highlight cyan                   */
+  --gold:         #d4922a;   /* amber (gecko eyes) — secondary   */
+  --gold-bright:  #f0b84a;   /* bright amber highlight           */
+  --warning:      #d4922a;   /* same amber for warnings          */
+  --danger:       #e05050;   /* muted red for errors             */
+  --blue:         #5bbfea;   /* softer blue for het tags         */
+  --purple:       #a87ee0;   /* kept for recessive tags          */
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 28px 20px;
+}
+.wrap { max-width: 1080px; margin: 0 auto; }
+
+/* ─── HEADER ─────────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 32px;
+  padding: 22px 24px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #0e1a2e 0%, #111e35 60%, #0d1929 100%);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 rgba(50,200,224,.08), 0 4px 24px rgba(0,0,0,.35);
+}
+.mendel-avatar {
+  width: 108px;
+  height: 108px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(50,200,224,.30);
+  box-shadow: 0 0 0 4px rgba(50,200,224,.08),
+              0 0 22px rgba(50,200,224,.45),
+              0 0 48px rgba(50,200,224,.20);
+}
+.mendel-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 15%;
+  display: block;
+}
+.header-text h1 {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+  text-shadow: 0 0 24px rgba(50,200,224,.35);
+}
+.header-text .tagline {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-top: 5px;
+  line-height: 1.5;
+}
+.header-text .tagline em {
+  color: rgba(212,146,42,.85);
+  font-style: italic;
+}
+.quick-examples {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+.quick-examples span {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.example-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.ex-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 4px 10px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.ex-btn:hover {
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* ─── PARENTS GRID ───────────────────────────────────────────────────────── */
+.parents-grid {
+  display: grid;
+  grid-template-columns: 1fr 52px 1fr;
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 20px;
+}
+.vs-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 42px;
+  color: var(--muted);
+  font-size: 22px;
+  font-weight: 700;
+}
+.parent-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  transition: border-color 0.3s;
+}
+.parent-card.flash { border-color: var(--accent) !important; }
+.parent-card h2 {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 14px;
+}
+.gene-picker {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+select, input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  padding: 8px 10px;
+}
+select { cursor: pointer; }
+select:focus, input:focus { outline: none; border-color: var(--accent); }
+option { background: #21262d; }
+.copy-select { width: 90px; }
+.btn-add {
+  background: var(--accent-dim);
+  border: 1px solid rgba(50,200,224,.35);
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  transition: all 0.15s;
+  white-space: nowrap;
+  box-shadow: 0 1px 6px rgba(50,200,224,.20);
+}
+.btn-add:hover { background: var(--accent); box-shadow: 0 2px 10px rgba(50,200,224,.35); }
+.gene-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-height: 32px;
+}
+.gene-tag {
+  align-items: center;
+  border-radius: 20px;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 5px;
+  padding: 4px 8px 4px 10px;
+}
+.gene-tag.recessive {
+  background: rgba(188,140,255,.12);
+  border: 1px solid rgba(188,140,255,.35);
+  color: var(--purple);
+}
+.gene-tag.codominant {
+  background: rgba(88,166,255,.12);
+  border: 1px solid rgba(88,166,255,.35);
+  color: var(--blue);
+}
+.tag-copies {
+  background: rgba(255,255,255,.1);
+  border-radius: 10px;
+  font-size: 10px;
+  padding: 1px 5px;
+}
+.tag-remove {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  opacity: .55;
+  padding: 0;
+}
+.tag-remove:hover { opacity: 1; }
+
+/* ─── CALCULATE ──────────────────────────────────────────────────────────── */
+.calc-row {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.btn-calc {
+  background: linear-gradient(135deg, var(--accent-dim), var(--accent));
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  padding: 14px 44px;
+  transition: all 0.15s;
+  box-shadow: 0 2px 14px rgba(50,200,224,0.30);
+}
+.btn-calc:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 24px rgba(50,200,224,0.50);
+  background: linear-gradient(135deg, var(--accent), var(--accent-bright));
+}
+.btn-calc:active { transform: translateY(0); }
+
+/* ─── RESULTS ────────────────────────────────────────────────────────────── */
+.results-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px;
+  margin-bottom: 24px;
+}
+.results-panel h2 {
+  color: var(--accent);
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+.empty-state {
+  padding: 48px 20px;
+  text-align: center;
+}
+.empty-state .mascot { font-size: 52px; margin-bottom: 12px; }
+.empty-state p { color: var(--muted); font-size: 15px; }
+.empty-state .hint {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 8px;
+  opacity: 0.7;
+}
+
+/* Health warnings */
+.warn-box {
+  background: rgba(210,153,34,.08);
+  border: 1px solid rgba(210,153,34,.35);
+  border-radius: 8px;
+  color: var(--warning);
+  font-size: 13px;
+  margin-bottom: 8px;
+  padding: 10px 14px;
+}
+.warn-box strong { font-weight: 700; }
+.danger-box {
+  background: rgba(248,81,73,.08);
+  border: 1px solid rgba(248,81,73,.35);
+  border-radius: 8px;
+  color: var(--danger);
+  font-size: 13px;
+  margin-bottom: 8px;
+  padding: 10px 14px;
+}
+.danger-box strong { font-weight: 700; }
+.warnings-section { margin-bottom: 14px; }
+
+/* Results table */
+.outcomes-table {
+  border-collapse: collapse;
+  font-size: 13px;
+  width: 100%;
+}
+.outcomes-table th {
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  padding: 8px 10px;
+  text-align: left;
+  text-transform: uppercase;
+}
+.outcomes-table td {
+  border-bottom: 1px solid rgba(48,54,61,.5);
+  padding: 9px 10px;
+  vertical-align: middle;
+}
+.outcomes-table tr:last-child td { border-bottom: none; }
+.outcomes-table tr:hover td { background: rgba(255,255,255,.018); }
+.prob-col { width: 110px; }
+.prob-wrap {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+.prob-bar-bg {
+  background: var(--surface2);
+  border-radius: 3px;
+  height: 5px;
+  overflow: hidden;
+  width: 50px;
+  flex-shrink: 0;
+}
+.prob-bar-fill {
+  background: var(--accent);
+  border-radius: 3px;
+  height: 100%;
+  transition: width 0.3s;
+}
+.prob-num {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 44px;
+}
+.morph-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.mp {
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+}
+.mp.visual {
+  background: rgba(50,200,224,.13);
+  border: 1px solid rgba(50,200,224,.35);
+  color: var(--accent-bright);
+}
+.mp.super {
+  background: rgba(212,146,42,.20);
+  border: 1px solid rgba(212,146,42,.55);
+  color: var(--gold-bright);
+  font-weight: 800;
+}
+.mp.bel {
+  background: rgba(50,200,224,.20);
+  border: 1px solid rgba(50,200,224,.50);
+  color: #9ff0ff;
+  font-weight: 800;
+}
+.mp.het {
+  background: rgba(188,140,255,.1);
+  border: 1px solid rgba(188,140,255,.28);
+  color: var(--purple);
+}
+.mp.normal-pill {
+  background: rgba(139,148,158,.08);
+  border: 1px solid rgba(139,148,158,.2);
+  color: var(--muted);
+}
+.mp.flagged {
+  background: rgba(248,81,73,.08);
+  border: 1px solid rgba(248,81,73,.3);
+  color: #ff7b72;
+  font-size: 10px;
+}
+.rank-1 td { background: rgba(50,200,224,.04); }
+
+/* results summary bar */
+.results-meta {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.meta-stat {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 5px 10px;
+}
+.meta-stat span { color: var(--accent); font-weight: 700; }
+
+/* ─── GENE LIBRARY ───────────────────────────────────────────────────────── */
+.library {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px;
+}
+.library-header {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.library-header h2 { font-size: 17px; font-weight: 700; }
+.library-sub { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+.lib-search {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  width: 100%;
+}
+.lib-search:focus { outline: none; border-color: var(--accent); }
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+.flt {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  transition: all 0.15s;
+}
+.flt.on {
+  background: rgba(50,200,224,.14);
+  border-color: var(--accent-dim);
+  color: var(--accent);
+  box-shadow: 0 0 8px rgba(50,200,224,.15);
+}
+.lib-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.lib-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 11px 13px;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.lib-card:hover {
+  border-color: var(--accent-dim);
+  transform: translateY(-1px);
+}
+.lib-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+.lib-card-type {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.lib-card-type.recessive { color: var(--purple); }
+.lib-card-type.codominant { color: var(--blue); }
+.lib-card-type.dominant { color: var(--warning); }
+.lib-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+.lib-card-info {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  float: right;
+  font-size: 13px;
+  line-height: 1;
+  margin: -2px -4px 0 0;
+  padding: 2px 4px;
+  transition: color 0.15s;
+}
+.lib-card-info:hover { color: var(--blue); }
+
+/* ─── GENE DETAIL PANEL ──────────────────────────────────────────── */
+.gene-detail-overlay {
+  background: rgba(0,0,0,.55);
+  bottom: 0; left: 0; right: 0; top: 0;
+  display: none;
+  position: fixed;
+  z-index: 900;
+}
+.gene-detail-overlay.open { display: block; }
+.gene-detail-panel {
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  bottom: 0;
+  box-shadow: -8px 0 32px rgba(0,0,0,.5);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  width: min(420px, 95vw);
+}
+.gene-detail-overlay.open .gene-detail-panel { transform: translateX(0); }
+.gdp-header {
+  align-items: flex-start;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 20px 20px 16px;
+}
+.gdp-title { font-size: 22px; font-weight: 800; }
+.gdp-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+  padding: 0;
+}
+.gdp-close:hover { color: var(--text); }
+.gdp-body { padding: 20px; display: flex; flex-direction: column; gap: 18px; }
+.gdp-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.gdp-price-row {
+  align-items: center;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  gap: 0;
+  overflow: hidden;
+}
+.gdp-stat {
+  flex: 1;
+  padding: 14px 16px;
+  text-align: center;
+}
+.gdp-stat + .gdp-stat { border-left: 1px solid var(--border); }
+.gdp-stat-val { font-size: 22px; font-weight: 800; color: var(--accent); }
+.gdp-stat-lbl { color: var(--muted); font-size: 10px; letter-spacing: 0.5px; margin-top: 2px; text-transform: uppercase; }
+.gdp-section-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.gdp-about {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.gdp-meta-row {
+  color: var(--muted);
+  display: flex;
+  font-size: 12px;
+  gap: 6px;
+}
+.gdp-meta-row strong { color: var(--text); }
+.gdp-avail {
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 10px;
+  text-transform: uppercase;
+}
+.gdp-avail.Common    { background: rgba(63,185,80,.15); border: 1px solid rgba(63,185,80,.3); color: var(--accent); }
+.gdp-avail.Higher    { background: rgba(88,166,255,.15); border: 1px solid rgba(88,166,255,.3); color: var(--blue); }
+.gdp-avail.Lower     { background: rgba(188,140,255,.15); border: 1px solid rgba(188,140,255,.3); color: var(--purple); }
+.gdp-avail.Rarest    { background: rgba(248,81,73,.15); border: 1px solid rgba(248,81,73,.3); color: var(--danger); }
+.gdp-add-row { display: flex; gap: 8px; }
+.gdp-add-btn {
+  background: var(--accent-dim);
+  border: none;
+  border-radius: 7px;
+  color: #fff;
+  cursor: pointer;
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px;
+  transition: background 0.15s;
+}
+.gdp-add-btn:hover { background: var(--accent); }
+.badge {
+  border-radius: 10px;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  text-transform: uppercase;
+}
+.badge.bel {
+  background: rgba(88,166,255,.12);
+  border: 1px solid rgba(88,166,255,.3);
+  color: #79c0ff;
+}
+.badge.health {
+  background: rgba(210,153,34,.12);
+  border: 1px solid rgba(210,153,34,.3);
+  color: var(--warning);
+}
+.badge.cx {
+  background: rgba(188,140,255,.12);
+  border: 1px solid rgba(188,140,255,.3);
+  color: var(--purple);
+}
+.lib-click-hint {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  font-size: 11px;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.lib-target {
+  display: flex;
+  gap: 8px;
+}
+.lib-target-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  transition: all 0.15s;
+}
+.lib-target-btn.active {
+  background: rgba(63,185,80,.15);
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* ─── PUNNETT REFERENCE ──────────────────────────────────────────────────── */
+.ref-section {
+  margin-top: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px;
+}
+.ref-section h2 { font-size: 17px; font-weight: 700; margin-bottom: 14px; }
+.ref-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.ref-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+}
+.ref-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--accent); }
+.ref-card table { border-collapse: collapse; width: 100%; font-size: 12px; }
+.ref-card td, .ref-card th {
+  border: 1px solid var(--border);
+  padding: 4px 7px;
+  text-align: center;
+}
+.ref-card th { background: var(--surface); color: var(--muted); font-size: 11px; }
+.ref-card .c-vis { color: var(--accent-bright); font-weight: 700; }
+.ref-card .c-het { color: var(--purple); }
+.ref-card .c-norm { color: var(--muted); }
+.ref-card .c-super { color: #aff3b5; font-weight: 800; }
+
+/* ─── TABS ───────────────────────────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 28px;
+  padding-bottom: 0;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: -1px;
+  padding: 10px 18px;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  letter-spacing: 0.1px;
+}
+.tab-btn:hover { color: var(--text); border-bottom-color: rgba(50,200,224,.25); }
+.tab-btn.active {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+  text-shadow: 0 0 16px rgba(50,200,224,.40);
+}
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ─── SCROLLBAR ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(50,200,224,.22); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(50,200,224,.45); }
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────────────────── */
+@media (max-width: 680px) {
+  body { padding: 16px 12px; }
+
+  /* Header */
+  .header { flex-wrap: wrap; gap: 12px; }
+  .quick-examples { display: none; }
+  .header-text h1 { font-size: 24px; }
+
+  /* Tabs */
+  .tab-bar { gap: 0; overflow-x: auto; }
+  .tab-btn { flex: 1; font-size: 12px; padding: 10px 8px; }
+
+  /* Parents */
+  .parents-grid { grid-template-columns: 1fr; gap: 10px; }
+  .vs-col { display: none; }
+
+  /* Gene picker — typeahead full width, copies + add side by side below */
+  .gene-picker {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+  }
+  .typeahead-wrap { grid-column: 1 / -1; }
+  .copy-select { width: auto; }
+
+  /* Calculate button */
+  .btn-calc { width: 100%; padding: 14px 20px; font-size: 15px; }
+
+  /* Results */
+  .results-panel { padding: 14px; overflow-x: auto; }
+  .outcomes-table { min-width: 480px; }
+  .prob-bar-bg { display: none; }
+
+  /* Clutch */
+  .clutch-panel { padding: 16px; }
+  .clutch-controls { flex-wrap: wrap; gap: 8px; }
+  .btn-roll { flex: 1; }
+
+  /* Library */
+  .library { padding: 14px; }
+  .lib-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    max-height: none;
+  }
+
+  /* Reference */
+  .ref-section { padding: 14px; }
+  .ref-grid { grid-template-columns: 1fr; }
+
+  /* Gene detail panel — full screen on mobile */
+  .gene-detail-panel { width: 100vw; }
+}
+
+/* ─── TYPEAHEAD ──────────────────────────────────────────────────────────── */
+.typeahead-wrap { position: relative; flex: 1; min-width: 0; }
+.ta-input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  padding: 8px 10px;
+  width: 100%;
+}
+.ta-input:focus { outline: none; border-color: var(--accent); }
+.ta-input::placeholder { color: var(--muted); font-style: italic; }
+.ta-drop {
+  background: var(--surface2);
+  border: 1px solid var(--accent-dim);
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+  display: none;
+  left: 0;
+  max-height: 230px;
+  overflow-y: auto;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 300;
+}
+.ta-drop.open { display: block; }
+.ta-opt {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  font-size: 12px;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 7px 12px;
+  transition: background 0.08s;
+}
+.ta-opt:hover, .ta-opt.hi { background: rgba(63,185,80,0.1); }
+.ta-opt-name { font-weight: 500; }
+.ta-opt-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.ta-opt-badge.recessive  { color: var(--purple); }
+.ta-opt-badge.codominant { color: var(--blue); }
+.ta-opt-badge.dominant   { color: var(--warning); }
+.ta-opt-badge.combo      { color: var(--accent); }
+.ta-empty { color: var(--muted); font-size: 12px; padding: 10px 12px; }
+
+/* ─── CLUTCH SIMULATOR ───────────────────────────────────────────────────── */
+.clutch-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: none;
+  margin-bottom: 24px;
+  padding: 22px;
+}
+.clutch-panel.visible { display: block; }
+.clutch-panel h2 { color: var(--accent); font-size: 17px; font-weight: 700; margin-bottom: 14px; }
+.clutch-controls {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.clutch-controls label { color: var(--muted); font-size: 13px; }
+.clutch-n {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 6px 10px;
+  text-align: center;
+  width: 58px;
+}
+.clutch-n:focus { outline: none; border-color: var(--accent); }
+.btn-roll {
+  background: rgba(63,185,80,0.12);
+  border: 1px solid var(--accent-dim);
+  border-radius: 8px;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 7px 22px;
+  transition: all 0.15s;
+}
+.btn-roll:hover { background: rgba(63,185,80,0.22); border-color: var(--accent); }
+.eggs-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  margin-bottom: 16px;
+}
+.egg-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 11px;
+}
+.egg-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.egg-pheno { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+.egg-hets  { display: flex; flex-wrap: wrap; gap: 4px; }
+.clutch-summary {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.clutch-summary h3 {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+.sum-row { align-items: center; display: flex; gap: 8px; margin-bottom: 6px; font-size: 13px; }
+.sum-row:last-child { margin-bottom: 0; }
+.sum-n {
+  background: var(--accent-dim);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  min-width: 24px;
+  padding: 2px 6px;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ── HEADER ──────────────────────────────────────────────────────────── -->
+<div class="header">
+  <div class="mendel-avatar">
+    <img src="data:image/jpeg;base64,/9j/4Qt4RXhpZgAASUkqAAgAAAAIAA8BAgAFAAAAfgAAABIBAwABAAAAAQAAABoBBQABAAAAbgAAABsBBQABAAAAdgAAACgBAwABAAAAAgAAABMCAwABAAAAAQAAAGmHBAABAAAAIgsAAIaSBwCdCgAAhAAAAAAAAABIAAAAAQAAAEgAAAABAAAAc2FuYQAAQVNDSUkAAAB7InByb21wdCI6InNpbmdsZSBmdWxsIGJvZHkgY2hhcmFjdGVyLCBmcm9udCBmYWNpbmcsIFQtcG9zZSwgY2xlYW4gd2hpdGUgYmFja2dyb3VuZCwgY2VudGVyZWQsIGlzb2xhdGVkIGNoYXJhY3Rlciwgbm8gdGV4dCwgbm8gbGFiZWxzLCBjbGVhciBzaWxob3VldHRlLCByZWFkeSBmb3IgM0QgY29udmVyc2lvbiwgM2QgZGlzbmV5IHBpeGFyIHN0eWxlLCBzdHlsaXplZCwgc29mdCBsaWdodGluZywgZXhwcmVzc2l2ZSwgSGVyZSdzIGFuIGVsYWJvcmF0ZWQsIHByZWNpc2lvbiBsZXZlbCBwcm9tcHQgeW91IGNhbiB1c2UgZm9yIGltYWdlIGdlbmVyYXRpb24gb3IgZGV0YWlsZWQgYXJ0aXN0aWMgZGlyZWN0aW9uOi4gLiBTdWJqZWN0OiBBIHBob3RvcmVhbGlzdGljIDNEIHJlbmRlcmVkIGFudGhyb3BvbW9ycGhpYyBlbGVjdHJpYyBibHVlIGRheSBnZWNrbyAoIEx5Z29kYWN0eWx1cyB3aWxsaWFtc2kgKSBkZXBpY3RlZCBhcyBhIGRpc3Rpbmd1aXNoZWQgc2NpZW50aXN0LCBzaG93biBmcm9tIHRoZSBjaGVzdCB1cCBpbiBhIHRocmVlIHF1YXJ0ZXIgcG9ydHJhaXQgdmlldy4uIFNwZWNpZXMgQWNjdXJhdGUgTWFya2luZ3MgKEVsZWN0cmljIEJsdWUgRGF5IEdlY2tvKTogLiBCYXNlIGNvbG9yYXRpb24gZG9taW5hdGVkIGJ5IHZpdmlkLCBzYXR1cmF0ZWQgZWxlY3RyaWMgYmx1ZSAoY29iYWx0IHRvIHR1cnF1b2lzZSBncmFkaWVudCkgY292ZXJpbmcgcm91Z2hseSA4NSUgb2YgdmlzaWJsZSBza2luLCB3aXRoIGJsdWUgaW50ZW5zaXR5IHBlYWtpbmcgYWxvbmcgdGhlIGRvcnNhbCByaWRnZSwgY3Jvd24sIGFuZCBmbGFua3MuIENoYXJhY3RlcmlzdGljIGpldCBibGFjayBleWUgc3RyaXBlIHJ1bm5pbmcgZnJvbSB0aGUgbm9zdHJpbCwgdGhyb3VnaCB0aGUgZXllLCBhbmQgZXh0ZW5kaW5nIGJhY2sgYWxvbmcgdGhlIG5lY2suIFNlY29uZGFyeSBibGFjayBtYXJraW5ncyBhbG9uZyB0aGUgdGhyb2F0IHJlZ2lvbiBmb3JtaW5nIHN1YnRsZSB2ZXJ0aWNhbCBzdHJpYXRpb25zIChpbmRpY2F0aW5nIGEgbWF0dXJlIG1hbGUpLiBGaW5lLCByZWFsaXN0aWMgZ3JhbnVsYXIgc2NhbGUgdGV4dHVyZSBhY3Jvc3MgdGhlIGVudGlyZSBib2R5IC0tIGVhY2ggaW5kaXZpZHVhbCBzY2FsZSByZW5kZXJlZCB3aXRoLi4uLCBoaWdobHkgZGV0YWlsZWQsIHByb2Zlc3Npb25hbCBjaGFyYWN0ZXIgZGVzaWduIiwib3JpZ2luYWxQcm9tcHQiOiJzaW5nbGUgZnVsbCBib2R5IGNoYXJhY3RlciwgZnJvbnQgZmFjaW5nLCBULXBvc2UsIGNsZWFuIHdoaXRlIGJhY2tncm91bmQsIGNlbnRlcmVkLCBpc29sYXRlZCBjaGFyYWN0ZXIsIG5vIHRleHQsIG5vIGxhYmVscywgY2xlYXIgc2lsaG91ZXR0ZSwgcmVhZHkgZm9yIDNEIGNvbnZlcnNpb24sIDNkIGRpc25leSBwaXhhciBzdHlsZSwgc3R5bGl6ZWQsIHNvZnQgbGlnaHRpbmcsIGV4cHJlc3NpdmUsIEhlcmUncyBhbiBlbGFib3JhdGVkLCBwcmVjaXNpb24gbGV2ZWwgcHJvbXB0IHlvdSBjYW4gdXNlIGZvciBpbWFnZSBnZW5lcmF0aW9uIG9yIGRldGFpbGVkIGFydGlzdGljIGRpcmVjdGlvbjouIC4gU3ViamVjdDogQSBwaG90b3JlYWxpc3RpYyAzRCByZW5kZXJlZCBhbnRocm9wb21vcnBoaWMgZWxlY3RyaWMgYmx1ZSBkYXkgZ2Vja28gKCBMeWdvZGFjdHlsdXMgd2lsbGlhbXNpICkgZGVwaWN0ZWQgYXMgYSBkaXN0aW5ndWlzaGVkIHNjaWVudGlzdCwgc2hvd24gZnJvbSB0aGUgY2hlc3QgdXAgaW4gYSB0aHJlZSBxdWFydGVyIHBvcnRyYWl0IHZpZXcuLiBTcGVjaWVzIEFjY3VyYXRlIE1hcmtpbmdzIChFbGVjdHJpYyBCbHVlIERheSBHZWNrbyk6IC4gQmFzZSBjb2xvcmF0aW9uIGRvbWluYXRlZCBieSB2aXZpZCwgc2F0dXJhdGVkIGVsZWN0cmljIGJsdWUgKGNvYmFsdCB0byB0dXJxdW9pc2UgZ3JhZGllbnQpIGNvdmVyaW5nIHJvdWdobHkgODUlIG9mIHZpc2libGUgc2tpbiwgd2l0aCBibHVlIGludGVuc2l0eSBwZWFraW5nIGFsb25nIHRoZSBkb3JzYWwgcmlkZ2UsIGNyb3duLCBhbmQgZmxhbmtzLiBDaGFyYWN0ZXJpc3RpYyBqZXQgYmxhY2sgZXllIHN0cmlwZSBydW5uaW5nIGZyb20gdGhlIG5vc3RyaWwsIHRocm91Z2ggdGhlIGV5ZSwgYW5kIGV4dGVuZGluZyBiYWNrIGFsb25nIHRoZSBuZWNrLiBTZWNvbmRhcnkgYmxhY2sgbWFya2luZ3MgYWxvbmcgdGhlIHRocm9hdCByZWdpb24gZm9ybWluZyBzdWJ0bGUgdmVydGljYWwgc3RyaWF0aW9ucyAoaW5kaWNhdGluZyBhIG1hdHVyZSBtYWxlKS4gRmluZSwgcmVhbGlzdGljIGdyYW51bGFyIHNjYWxlIHRleHR1cmUgYWNyb3NzIHRoZSBlbnRpcmUgYm9keSAtLSBlYWNoIGluZGl2aWR1YWwgc2NhbGUgcmVuZGVyZWQgd2l0aC4uLiwgaGlnaGx5IGRldGFpbGVkLCBwcm9mZXNzaW9uYWwgY2hhcmFjdGVyIGRlc2lnbiIsIndpZHRoIjo1MTIsImhlaWdodCI6NTEyLCJzZWVkIjoxMzU1MTUxMSwibW9kZWwiOiJzYW5hIiwiZW5oYW5jZSI6ZmFsc2UsIm5vbG9nbyI6dHJ1ZSwibmVnYXRpdmVfcHJvbXB0IjoidW5kZWZpbmVkIiwibm9mZWVkIjpmYWxzZSwic2FmZSI6ZmFsc2UsInF1YWxpdHkiOiJtZWRpdW0iLCJp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" alt="Mendel — Electric Blue Gecko Scientist">
+  </div>
+  <div class="header-text">
+    <h1>Mendel</h1>
+    <div class="tagline">Ball Python Genetics Calculator &nbsp;·&nbsp; <em>"In the garden of genetics, every scale tells a story."</em></div>
+  </div>
+</div>
+
+<!-- ── TAB BAR ──────────────────────────────────────────────────────────── -->
+<nav class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('calc')">🧬 Calculator</button>
+  <button class="tab-btn" onclick="showTab('library')">📚 Gene Library</button>
+  <button class="tab-btn" onclick="showTab('reference')">📐 Reference</button>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     TAB: CALCULATOR
+══════════════════════════════════════════════════════════════════════════ -->
+<div class="tab-pane active" id="tab-calc">
+
+<!-- ── PARENTS ──────────────────────────────────────────────────────────── -->
+<div class="parents-grid">
+  <div class="parent-card" id="p1card">
+    <h2>🐍 Parent 1</h2>
+    <div class="gene-picker">
+      <div class="typeahead-wrap">
+        <input class="ta-input" id="ta-input-1" type="text" placeholder="Search genes…" autocomplete="off">
+        <div class="ta-drop" id="ta-drop-1"></div>
+      </div>
+      <select id="p1copies" class="copy-select">
+        <option value="1">1 copy</option>
+        <option value="2">2 copies</option>
+      </select>
+      <button class="btn-add" onclick="addGene(1)">+ Add</button>
+    </div>
+    <div class="gene-tags" id="p1tags"></div>
+  </div>
+
+  <div class="vs-col">×</div>
+
+  <div class="parent-card" id="p2card">
+    <h2>🐍 Parent 2</h2>
+    <div class="gene-picker">
+      <div class="typeahead-wrap">
+        <input class="ta-input" id="ta-input-2" type="text" placeholder="Search genes…" autocomplete="off">
+        <div class="ta-drop" id="ta-drop-2"></div>
+      </div>
+      <select id="p2copies" class="copy-select">
+        <option value="1">1 copy</option>
+        <option value="2">2 copies</option>
+      </select>
+      <button class="btn-add" onclick="addGene(2)">+ Add</button>
+    </div>
+    <div class="gene-tags" id="p2tags"></div>
+  </div>
+</div>
+
+<div class="calc-row">
+  <button class="btn-calc" onclick="runCalc()">🧬 Calculate Offspring Probabilities</button>
+</div>
+
+<!-- ── RESULTS ──────────────────────────────────────────────────────────── -->
+<div class="results-panel" id="results">
+  <div class="empty-state">
+    <div class="mascot">🦎</div>
+    <p>Select genes for each parent, then hit <strong>Calculate</strong>.</p>
+    <p class="hint">Or try a Quick Example above ↑</p>
+  </div>
+</div>
+
+<!-- ── CLUTCH SIMULATOR ──────────────────────────────────────────────────── -->
+<div class="clutch-panel" id="clutch-panel">
+  <h2>🥚 Clutch Simulator</h2>
+  <div class="clutch-controls">
+    <label for="clutch-n">Eggs in clutch:</label>
+    <input class="clutch-n" id="clutch-n" type="number" min="1" max="20" value="6">
+    <button class="btn-roll" onclick="simulateClutch()">🎲 Roll Clutch</button>
+  </div>
+  <div id="clutch-results"></div>
+</div>
+
+</div><!-- /tab-calc -->
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     TAB: GENE LIBRARY
+══════════════════════════════════════════════════════════════════════════ -->
+<div class="tab-pane" id="tab-library">
+
+<!-- ── GENE LIBRARY ─────────────────────────────────────────────────────── -->
+<div class="library">
+  <div class="library-header">
+    <h2>🧬 Gene Library</h2>
+  </div>
+  <p class="library-sub">Click any card to add it to a parent. Use the toggle below to choose which parent.</p>
+  <div class="lib-click-hint">
+    <span>Adding to:</span>
+    <div class="lib-target">
+      <button class="lib-target-btn active" id="tgt1btn" onclick="setLibTarget(1)">Parent 1</button>
+      <button class="lib-target-btn" id="tgt2btn" onclick="setLibTarget(2)">Parent 2</button>
+    </div>
+  </div>
+  <input class="lib-search" type="text" placeholder="Search genes…" oninput="renderLib()" id="libsearch">
+  <div class="filter-row">
+    <button class="flt on" onclick="setFlt('all',this)">All</button>
+    <button class="flt" onclick="setFlt('recessive',this)">Recessive</button>
+    <button class="flt" onclick="setFlt('codominant',this)">Incomplete Dominant</button>
+    <button class="flt" onclick="setFlt('dominant',this)">Complete Dominant</button>
+    <button class="flt" onclick="setFlt('complex',this)">🔗 Complexes</button>
+    <button class="flt" onclick="setFlt('health',this)">⚠️ Health Flags</button>
+  </div>
+  <div class="lib-grid" id="libgrid"></div>
+</div>
+
+</div><!-- /tab-library -->
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     TAB: REFERENCE
+══════════════════════════════════════════════════════════════════════════ -->
+<div class="tab-pane" id="tab-reference">
+
+<!-- ── PUNNETT REFERENCE ────────────────────────────────────────────────── -->
+<div class="ref-section">
+  <h2>📐 Punnett Square Reference</h2>
+  <div class="ref-grid">
+    <div class="ref-card">
+      <h3>Recessive — Het × Het</h3>
+      <table>
+        <tr><th></th><th>R (allele)</th><th>n</th></tr>
+        <tr><td>R</td><td class="c-vis">RR (Visual)</td><td class="c-het">Rn (Het)</td></tr>
+        <tr><td>n</td><td class="c-het">nR (Het)</td><td class="c-norm">nn (Normal)</td></tr>
+      </table>
+      <p style="color:var(--muted);font-size:11px;margin-top:6px">25% Visual · 50% Het · 25% Normal</p>
+    </div>
+    <div class="ref-card">
+      <h3>Incomplete Dominant — Single × Single</h3>
+      <table>
+        <tr><th></th><th>S</th><th>n</th></tr>
+        <tr><td>S</td><td class="c-super">SS (Super)</td><td class="c-vis">Sn (Single)</td></tr>
+        <tr><td>n</td><td class="c-vis">nS (Single)</td><td class="c-norm">nn (Normal)</td></tr>
+      </table>
+      <p style="color:var(--muted);font-size:11px;margin-top:6px">25% Super · 50% Single · 25% Normal</p>
+    </div>
+    <div class="ref-card">
+      <h3>Recessive — Visual × Het</h3>
+      <table>
+        <tr><th></th><th>R</th><th>n</th></tr>
+        <tr><td>R</td><td class="c-vis">RR (Visual)</td><td class="c-het">Rn (Het)</td></tr>
+        <tr><td>R</td><td class="c-vis">RR (Visual)</td><td class="c-het">Rn (Het)</td></tr>
+      </table>
+      <p style="color:var(--muted);font-size:11px;margin-top:6px">50% Visual · 50% Het</p>
+    </div>
+    <div class="ref-card">
+      <h3>Black Eyed Lucy Complex</h3>
+      <p style="font-size:12px;color:var(--muted);line-height:1.5">
+        <strong style="color:var(--text)">Allelic locus:</strong> Fire, Sulfur, Disco, Flame, Vanilla.<br><br>
+        Any <strong>two copies</strong> (homo- or hetero-allelic) = <strong style="color:#e6edf3">🖤 Black Eyed Lucy</strong>.<br>
+        Single copy = single-gene visual (e.g. Fire).
+      </p>
+    </div>
+    <div class="ref-card">
+      <h3>Spider Complex</h3>
+      <p style="font-size:12px;color:var(--muted);line-height:1.5">
+        <strong style="color:var(--text)">Allelic locus:</strong> Spider, Spotnose, Chocolate, Cypress, Wookie, Blackhead, Champagne, Hidden Gene Woma, Saar, Sable, Shadow.<br><br>
+        Single copy = visual. Same-gene homo = Super.<br>
+        <strong style="color:var(--danger)">Spider/Spider & Champagne/Champagne = lethal.</strong><br>
+        Cross-gene compounds show both names.
+      </p>
+    </div>
+    <div class="ref-card">
+      <h3>BEL Complex</h3>
+      <p style="font-size:12px;color:var(--muted);line-height:1.5">
+        <strong style="color:var(--text)">Allelic locus:</strong> Mojave, Lesser/Butter, Phantom, Mystic, Russo, Honey, Special, Bamboo.<br><br>
+        Any <strong>two BEL copies</strong> (homo- or hetero-allelic) = <strong style="color:#a5d6ff">✨ Blue-Eyed Leucistic</strong>.<br>
+        Single copy = single-gene visual (e.g. Mojave).
+      </p>
+    </div>
+    <div class="ref-card">
+      <h3>Yellow Belly Complex</h3>
+      <p style="font-size:12px;color:var(--muted);line-height:1.5">
+        <strong style="color:var(--text)">Allelic locus:</strong> Yellow Belly, Asphalt, Gravel, Specter, Spark.<br><br>
+        YB/YB = <strong style="color:#ffe066">✨ Ivory</strong>.<br>
+        Same-gene homozygous = Super form.<br>
+        Cross-gene compound = both visuals expressed.
+      </p>
+    </div>
+    <div class="ref-card">
+      <h3>8 Ball Complex</h3>
+      <p style="font-size:12px;color:var(--muted);line-height:1.5">
+        <strong style="color:var(--text)">Allelic locus:</strong> Cinnamon, Black Pastel, Enchi, Red Axanthic (HRA).<br><br>
+        All are codominant — 1 copy = visual, homo = Super.<br>
+        Cin/BP = <strong style="color:var(--text)">Cinnamon Black Pastel</strong>.<br>
+        Cross-gene compounds show both names.
+      </p>
+    </div>
+    <div class="ref-card">
+      <h3>Albino Complex</h3>
+      <p style="font-size:12px;color:var(--muted);line-height:1.5">
+        <strong style="color:var(--text)">Allelic recessive locus.</strong><br><br>
+        Albino/Albino = Visual Albino.<br>
+        Candy/Candy = Visual Candy.<br>
+        Albino/Candy = <strong style="color:var(--text)">✨ Candino</strong> (compound visual).
+      </p>
+    </div>
+    <div class="ref-card">
+      <h3>Crypton (Clown / Cryptic)</h3>
+      <p style="font-size:12px;color:var(--muted);line-height:1.5">
+        <strong style="color:var(--text)">Allelic recessive locus.</strong><br><br>
+        Clown/Clown = Visual Clown.<br>
+        Cryptic/Cryptic = Visual Cryptic.<br>
+        Clown/Cryptic = <strong style="color:var(--text)">✨ Crypton</strong> (compound visual).
+      </p>
+    </div>
+    <div class="ref-card">
+      <h3>T+ Albino (Caramel / Ultramel)</h3>
+      <p style="font-size:12px;color:var(--muted);line-height:1.5">
+        <strong style="color:var(--text)">Allelic recessive locus.</strong><br><br>
+        Caramel/Caramel = Visual Caramel Albino.<br>
+        Ultramel/Ultramel = Visual Ultramel.<br>
+        Caramel/Ultramel = <strong style="color:var(--text)">T+ Albino compound</strong>.
+      </p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /tab-reference -->
+
+</div><!-- /wrap -->
+
+<!-- ─── GENE DETAIL PANEL ──────────────────────────────────────────────── -->
+<div class="gene-detail-overlay" id="geneDetailOverlay" onclick="closeGeneDetail(event)">
+  <div class="gene-detail-panel" onclick="event.stopPropagation()">
+    <div class="gdp-header">
+      <div>
+        <div class="gdp-title" id="gdpTitle"></div>
+        <div class="gdp-badges" id="gdpBadges" style="margin-top:8px"></div>
+      </div>
+      <button class="gdp-close" onclick="closeGeneDetail()">✕</button>
+    </div>
+    <div class="gdp-body">
+      <div class="gdp-price-row" id="gdpPriceRow"></div>
+      <div id="gdpAboutBlock"></div>
+      <div id="gdpMetaBlock"></div>
+      <div class="gdp-add-row" id="gdpAddRow"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   GENE DATABASE
+═══════════════════════════════════════════════════════════════════ */
+const GENES = {
+  // ── RECESSIVE ──────────────────────────────────────────────────────
+  albino:             { name:'Albino',                type:'recessive',  bel:false, health:null },
+  'lavender-albino':  { name:'Lavender Albino',       type:'recessive',  bel:false, health:null },
+  'caramel-albino':   { name:'Caramel / Caramel Albino', type:'recessive', bel:false, health:'Linked to kidney issues in some lines.' },
+  ultramel:           { name:'Ultramel',              type:'recessive',  bel:false, health:null },
+  'axanthic-vpi':     { name:'Axanthic (VPI)',        type:'recessive',  bel:false, health:null },
+  'axanthic-sk':      { name:'Axanthic (SK)',         type:'recessive',  bel:false, health:null },
+  'axanthic-jolliff': { name:'Axanthic (Jolliff)',    type:'recessive',  bel:false, health:null },
+  'axanthic-mj':      { name:'Axanthic (MJ)',         type:'recessive',  bel:false, health:null },
+  clown:              { name:'Clown',                 type:'recessive',  bel:false, health:null },
+  pied:               { name:'Piebald',               type:'recessive',  bel:false, health:null },
+  'desert-ghost':     { name:'Desert Ghost',          type:'recessive',  bel:false, health:null },
+  'orange-ghost':     { name:'Orange Ghost (Hypo)',   type:'recessive',  bel:false, health:null },
+  'genetic-stripe':   { name:'Genetic Stripe',        type:'recessive',  bel:false, health:null },
+  'red-stripe':       { name:'Red Stripe',            type:'codominant', bel:false, health:null },
+  'tri-stripe':       { name:'Tri-Stripe',            type:'recessive',  bel:false, health:null },
+  'genetic-black-back':{ name:'Genetic Black Back',  type:'recessive',  bel:false, health:null },
+  monsoon:            { name:'Monsoon',               type:'recessive',  bel:false, health:null },
+  lace:               { name:'Lace',                  type:'codominant', bel:false, health:null },
+  puzzle:             { name:'Puzzle',                type:'recessive',  bel:false, health:null },
+  marble:             { name:'Marble',                type:'recessive',  bel:false, health:null },
+  cryptic:            { name:'Cryptic',               type:'recessive',  bel:false, health:null },
+  confusion:          { name:'Confusion',             type:'codominant', bel:false, health:null },
+  'hidden-gene-woma': { name:'Hidden Gene Woma',      type:'codominant', bel:false, health:null },
+  disco:              { name:'Disco',                 type:'codominant', bel:false, health:null },
+  monarch:            { name:'Monarch',               type:'recessive',  bel:false, health:null },
+  'black-axanthic':   { name:'Black Axanthic',        type:'recessive',  bel:false, health:null },
+  acid:               { name:'Acid',                  type:'codominant', bel:false, health:null },
+  'orange-dream-het': { name:'Desert (Orange Dream Rec.)', type:'recessive', bel:false, health:null },
+  'red-gene':         { name:'Red Gene',              type:'codominant', bel:false, health:null },
+
+  // ── CODOMINANT / INCOMPLETE DOMINANT ───────────────────────────────
+  pastel:             { name:'Pastel',                type:'codominant', bel:false, health:null },
+  banana:             { name:'Banana / Coral Glow',   type:'codominant', bel:false, health:null },
+  enchi:              { name:'Enchi',                 type:'codominant', bel:false, health:null },
+  spider:             { name:'Spider',                type:'codominant', bel:false, health:'Wobble syndrome (neurological). Super Spider is non-viable.' },
+  champagne:          { name:'Champagne',             type:'codominant', bel:false, health:'Super Champagne is lethal / non-viable. Never breed Champagne × Champagne.' },
+  woma:               { name:'Woma',                  type:'codominant', bel:false, health:'Neurological issues reported in some lines.' },
+  'black-pastel':     { name:'Black Pastel',          type:'codominant', bel:false, health:'Super Black Pastel can have neurological complications.' },
+  cinnamon:           { name:'Cinnamon',              type:'codominant', bel:false, health:null },
+  mojave:             { name:'Mojave',                type:'codominant', bel:true,  health:null },
+  lesser:             { name:'Lesser / Butter',       type:'codominant', bel:true,  health:null },
+  phantom:            { name:'Phantom / Mystic',      type:'codominant', bel:true,  health:null },
+  russo:              { name:'Russo',                 type:'codominant', bel:true,  health:null },
+  'orange-dream':     { name:'Orange Dream',          type:'codominant', bel:false, health:null },
+  'yellow-belly':     { name:'Yellow Belly',          type:'codominant', bel:false, health:null },
+  gravel:             { name:'Gravel',                type:'codominant', bel:false, health:null },
+  specter:            { name:'Specter',               type:'codominant', bel:false, health:null },
+  spotnose:           { name:'Spotnose',              type:'codominant', bel:false, health:null },
+  ghi:                { name:'GHI',                   type:'codominant', bel:false, health:null },
+  leopard:            { name:'Leopard',               type:'codominant', bel:false, health:null },
+  pinstripe:          { name:'Pinstripe / Pin',       type:'codominant', bel:false, health:null },
+  fire:               { name:'Fire',                  type:'codominant', bel:false, health:null },
+  special:            { name:'Special',               type:'codominant', bel:false, health:null },
+  asphalt:            { name:'Asphalt',               type:'codominant', bel:false, health:null },
+  calico:             { name:'Calico',                type:'codominant', bel:false, health:null },
+  mahogany:           { name:'Mahogany',              type:'codominant', bel:false, health:null },
+  blade:              { name:'Blade',                 type:'codominant', bel:false, health:null },
+  blackhead:          { name:'Blackhead',             type:'codominant', bel:false, health:null },
+  vanilla:            { name:'Vanilla',               type:'codominant', bel:false, health:null },
+  cinder:             { name:'Cinder',                type:'codominant', bel:false, health:null },
+  sulfur:             { name:'Sulfur',                type:'codominant', bel:false, health:null },
+  bamboo:             { name:'Bamboo',                type:'codominant', bel:false, health:null },
+  java:               { name:'Java',                  type:'codominant', bel:false, health:null },
+  hypo:               { name:'Ghost / Hypo',          type:'recessive',  bel:false, health:null },
+  'orange-crush':     { name:'Orange Crush',          type:'codominant', bel:false, health:null },
+  'het-daddy':        { name:'Het Daddy',             type:'codominant', bel:false, health:null },
+  redhead:            { name:'Redhead',               type:'codominant', bel:false, health:null },
+  jedi:               { name:'Jedi',                  type:'codominant', bel:false, health:null },
+  granite:            { name:'Granite',               type:'codominant', bel:false, health:null },
+
+  // ── CODOMINANT / INCOMPLETE DOMINANT (cont.) ──────────────────────
+  spark:              { name:'Spark',                 type:'codominant', bel:false, health:null },
+  chocolate:          { name:'Chocolate',             type:'codominant', bel:false, health:null },
+  cypress:            { name:'Cypress',               type:'codominant', bel:false, health:null },
+  sable:              { name:'Sable',                 type:'codominant', bel:false, health:null },
+  'scaleless-head':   { name:'Scaleless Head',        type:'codominant', bel:false, health:null },
+  jaguar:             { name:'Jaguar',                type:'codominant', bel:false, health:null },
+  'jungle-woma':      { name:'Jungle Woma',           type:'codominant', bel:false, health:'Neurological issues similar to Woma reported in some lines.' },
+  bongo:              { name:'Bongo',                 type:'codominant', bel:false, health:null },
+  alloy:              { name:'Alloy',                 type:'codominant', bel:false, health:null },
+  splatter:           { name:'Splatter',              type:'codominant', bel:false, health:null },
+  huffman:            { name:'Huffman',               type:'codominant', bel:false, health:null },
+  trident:            { name:'Trident',               type:'codominant', bel:false, health:null },
+  'brown-back':       { name:'Brown Back',            type:'codominant', bel:false, health:null },
+  mocha:              { name:'Mocha',                 type:'codominant', bel:false, health:null },
+  quake:              { name:'Quake',                 type:'codominant', bel:false, health:null },
+  dot:                { name:'Dot',                   type:'codominant', bel:false, health:null },
+  grim:               { name:'Grim',                  type:'codominant', bel:false, health:null },
+  honey:              { name:'Honey',                 type:'codominant', bel:false, health:null },
+  'red-axanthic':     { name:'Red Axanthic',          type:'codominant', bel:false, health:null },
+  '210-hypo':         { name:'210 Hypo',              type:'recessive',  bel:false, health:null },
+
+  // ── ALLELIC COMPOUND ALIASES (expand to component genes on add) ────
+  crypton: { name:'Crypton',  type:'recessive', combo:['clown','cryptic'],  bel:false, health:null },
+  candino:  { name:'Candino', type:'recessive', combo:['albino','candy'],   bel:false, health:null },
+
+  // ── RECESSIVE (cont.) ─────────────────────────────────────────────
+  candy:              { name:'Candy',                 type:'recessive',  bel:false, health:null },
+  rainbow:            { name:'Rainbow',               type:'recessive',  bel:false, health:null },
+  sahara:             { name:'Sahara',                type:'recessive',  bel:false, health:null },
+  bengal:             { name:'Bengal',                type:'recessive',  bel:false, health:null },
+  patternless:        { name:'Patternless',           type:'recessive',  bel:false, health:null },
+  atomic:             { name:'Atomic',                type:'recessive',  bel:false, health:null },
+  'black-lace':       { name:'Black Lace',            type:'recessive',  bel:false, health:null },
+  whitewash:          { name:'Whitewash',             type:'recessive',  bel:false, health:null },
+
+  // ── CODOMINANT / INCOMPLETE DOMINANT (cont.) ──────────────────────
+  saar:               { name:'Saar',                  type:'codominant', bel:false, health:null },
+  shadow:             { name:'Shadow',                type:'codominant', bel:false, health:null },
+  hurricane:          { name:'Hurricane / Trick / Static', type:'codominant', bel:false, health:null },
+  ajax:               { name:'Ajax',                  type:'codominant', bel:false, health:null },
+  ambush:             { name:'Ambush',                type:'codominant', bel:false, health:null },
+  arroyo:             { name:'Arroyo',                type:'codominant', bel:false, health:null },
+  creed:              { name:'Creed',                 type:'codominant', bel:false, health:null },
+  'exo-lbb':          { name:'Exo-LBB',               type:'codominant', bel:false, health:null },
+  fader:              { name:'Fader',                 type:'codominant', bel:false, health:null },
+  flame:              { name:'Flame',                 type:'codominant', bel:false, health:null },
+  fusion:             { name:'Fusion',                type:'codominant', bel:false, health:null },
+  glossy:             { name:'Glossy',                type:'codominant', bel:false, health:null },
+  hydra:              { name:'Hydra',                 type:'codominant', bel:false, health:null },
+  'lc-black-magic':   { name:'LC Black Magic',        type:'codominant', bel:false, health:null },
+  lemonback:          { name:'Lemonback (PE Fire)',   type:'codominant', bel:false, health:null },
+  mario:              { name:'Mario',                 type:'codominant', bel:false, health:null },
+  orbit:              { name:'Orbit',                 type:'codominant', bel:false, health:null },
+  satin:              { name:'Satin',                 type:'codominant', bel:false, health:null },
+  shredder:           { name:'Shredder',              type:'codominant', bel:false, health:null },
+  taronja:            { name:'Taronja',               type:'codominant', bel:false, health:null },
+  'x-treme':          { name:'X-Treme Gene',          type:'codominant', bel:false, health:null },
+
+  // ── COMPLETE DOMINANT ─────────────────────────────────────────────
+  'black-belly':      { name:'Black Belly',           type:'dominant',   bel:false, health:null },
+  sandblast:          { name:'Sandblast',             type:'dominant',   bel:false, health:null },
+  stranger:           { name:'Stranger',              type:'dominant',   bel:false, health:null },
+  twister:            { name:'Twister',               type:'dominant',   bel:false, health:null },
+  web:                { name:'Web',                   type:'dominant',   bel:false, health:null },
+  wookie:             { name:'Wookie',                type:'codominant', bel:false, health:null },
+  shatter:            { name:'Shatter',               type:'codominant', bel:false, health:null },
+  nova:               { name:'Nova',                  type:'dominant',   bel:false, health:null },
+  raven:              { name:'Raven',                 type:'dominant',   bel:false, health:null },
+  reaper:             { name:'Reaper',                type:'dominant',   bel:false, health:null },
+  splash:             { name:'Splash',                type:'dominant',   bel:false, health:null },
+  kosmos:             { name:'Kosmos',                type:'dominant',   bel:false, health:null },
+  epic:               { name:'Epic',                  type:'dominant',   bel:false, health:null },
+  harlequin:          { name:'Harlequin',             type:'dominant',   bel:false, health:null },
+  coffee:             { name:'Coffee',                type:'dominant',   bel:false, health:null },
+  adder:              { name:'Adder',                 type:'codominant', bel:false, health:null },
+  sunrise:            { name:'Sunrise',               type:'dominant',   bel:false, health:null },
+  ahi:                { name:'Ahi',                   type:'dominant',   bel:false, health:null },
+  arid:               { name:'Arid',                  type:'dominant',   bel:false, health:null },
+  ashen:              { name:'Ashen',                 type:'dominant',   bel:false, health:null },
+  cafe:               { name:'Café',                  type:'dominant',   bel:false, health:null },
+  congo:              { name:'Congo',                 type:'dominant',   bel:false, health:null },
+  genex:              { name:'Genex',                 type:'dominant',   bel:false, health:null },
+  jolt:               { name:'Jolt',                  type:'dominant',   bel:false, health:null },
+  joppa:              { name:'Joppa',                 type:'dominant',   bel:false, health:null },
+  'nr-mandarin':      { name:'NR Mandarin',           type:'codominant', bel:false, health:null },
+  nyala:              { name:'Nyala',                 type:'dominant',   bel:false, health:null },
+  ofy:                { name:'OFY',                   type:'dominant',   bel:false, health:null },
+  sapphire:           { name:'Sapphire',              type:'dominant',   bel:false, health:null },
+  shrapnel:           { name:'Shrapnel',              type:'codominant', bel:false, health:null },
+};
+
+const BEL_SET = new Set(Object.entries(GENES).filter(([,g])=>g.bel).map(([id])=>id));
+const LETHAL_SUPER = new Set(['champagne','spider']);
+
+/* ═══════════════════════════════════════════════════════════════════
+   ALLELIC COMPLEXES
+   Genes at the same chromosomal locus — interactions are computed
+   at the locus level, not independently.
+═══════════════════════════════════════════════════════════════════ */
+const COMPLEXES = {
+  bel: {
+    name: 'BEL Complex',
+    label: 'BEL',
+    genes: ['mojave','lesser','phantom','russo','honey','special','bamboo'],
+    baseType: 'codominant',
+    desc: 'Any two alleles at this locus (same or different gene) = Blue-Eyed Leucistic.',
+  },
+  yb: {
+    name: 'Yellow Belly Complex',
+    label: 'YB',
+    genes: ['yellow-belly','gravel','specter','spark','asphalt'],
+    baseType: 'codominant',
+    desc: 'YB/YB = Ivory. Specter/YB = Super Stripe. Same-gene homo = Super form.',
+  },
+  '8ball': {
+    name: '8 Ball Complex',
+    label: '8-Ball',
+    genes: ['cinnamon','black-pastel','enchi','red-axanthic'],
+    baseType: 'codominant',
+    desc: 'Cinnamon, Black Pastel, Enchi, HRA are allelic. Compounds produce named morphs.',
+  },
+  blk: {
+    name: 'Black Eyed Lucy Complex',
+    label: 'BLK',
+    genes: ['fire','sulfur','disco','flame','vanilla'],
+    baseType: 'codominant',
+    desc: 'Any two alleles at this locus (same or different gene) = Black Eyed Lucy.',
+  },
+  spider: {
+    name: 'Spider Complex',
+    label: 'Spider',
+    genes: ['spider','spotnose','chocolate','cypress','wookie','blackhead','champagne','hidden-gene-woma','saar','sable','shadow'],
+    baseType: 'codominant',
+    desc: 'All allelic at the Spider locus. Spider & Champagne are lethal when homozygous.',
+  },
+  albino: {
+    name: 'Albino Complex',
+    label: 'Albino',
+    genes: ['albino','candy'],
+    baseType: 'recessive',
+    desc: 'Albino & Candy are allelic recessives. Compound (one of each) = Candino.',
+  },
+  crypton: {
+    name: 'Crypton (Clown / Cryptic)',
+    label: 'Crypton',
+    genes: ['clown','cryptic'],
+    baseType: 'recessive',
+    desc: 'Clown & Cryptic are allelic recessives. Compound (one of each) = visual Crypton.',
+  },
+  tplus: {
+    name: 'T+ Albino (Caramel / Ultramel)',
+    label: 'T+',
+    genes: ['caramel-albino','ultramel'],
+    baseType: 'recessive',
+    desc: 'Caramel Albino & Ultramel share the T+ locus. Compound = T+ Albino phenotype.',
+  },
+};
+
+const GENE_COMPLEX = {};
+for (const [cid, cx] of Object.entries(COMPLEXES))
+  for (const gid of cx.genes) GENE_COMPLEX[gid] = cid;
+
+/* ═══════════════════════════════════════════════════════════════════
+   GENE METADATA  (sourced from MorphMarket / MorphPedia)
+═══════════════════════════════════════════════════════════════════ */
+const GENE_META = {
+  '210-hypo': { firstBy:'Ron Tremper', firstYear:null, availability:'Rarest', listings:0, avgPrice:0, about:'A male 210 Hypo/Hollywood was imported in 2013 by Dr. Ron Tremper. 210 Reptiles took over the project in 2016 and have had multiple breedings with no visuals, except when paired to another visual 210 Hypo/Hollywood.' },
+  'acid': { firstBy:'Josh Jensen', firstYear:'2014', availability:null, listings:181, avgPrice:806.26, about:null },
+  'adder': { firstBy:'Colin Thomas', firstYear:'2006', availability:'Lower', listings:5, avgPrice:780, about:'Adder is a dominant mutation founded by Colin Thomas in 2006.' },
+  'ahi': { firstBy:'Yellow Belly Ball', firstYear:'2009', availability:'Rarest', listings:0, avgPrice:0, about:'AHI is a dominant mutation.' },
+  'ajax': { firstBy:'Major League Reptiles', firstYear:'2016', availability:'Rarest', listings:0, avgPrice:0, about:'Ajax is an incomplete dominant mutation founded by Major League Reptiles in 2016.' },
+  'albino': { firstBy:'Bob Clark Reptiles', firstYear:'1992', availability:'Common', listings:1010, avgPrice:434.24, about:'The Albino Ball Python is possibly one of the most notable morphs in the reptile hobby. Albinos are amelanistic, taking all dark pigmentation and leaving bright yellows, sharp whites and an outlineless pattern. Bob Clark Reptiles proved the Albino as the first recessive Ball Python morph.' },
+  'alloy': { firstBy:'Sloan Reptiles', firstYear:null, availability:null, listings:0, avgPrice:0, about:null },
+  'ambush': { firstBy:'Snakenstein Reptiles', firstYear:'2010', availability:'Rarest', listings:0, avgPrice:0, about:'The original female this started from was an African farm imported female in 1998. In 2018 they were able to pair son back to mom, and produce another one.' },
+  'arid': { firstBy:'The Florida Reptile Ranch', firstYear:'2012', availability:null, listings:0, avgPrice:0, about:null },
+  'arroyo': { firstBy:'Dan Wolfe', firstYear:'2010', availability:null, listings:17, avgPrice:422.06, about:null },
+  'ashen': { firstBy:'Russell Lawson', firstYear:'2009', availability:null, listings:0, avgPrice:0, about:null },
+  'asphalt': { firstBy:'Todd Constable', firstYear:'2009', availability:'Common', listings:403, avgPrice:563.2, about:'The Asphalt Ball Python is a member of the Super-Stripe complex, which closely resembles both the Yellowbelly and Gravel morphs, however produces a distinct Super form.' },
+  'atomic': { firstBy:'Mike Wilbanks', firstYear:'2011', availability:null, listings:0, avgPrice:0, about:null },
+  'axanthic-vpi': { firstBy:'VPI', firstYear:'1997', availability:null, listings:0, avgPrice:0, about:null },
+  'axanthic-sk': { firstBy:'The Snake Keeper', firstYear:'1999', availability:null, listings:0, avgPrice:0, about:null },
+  'axanthic-jolliff': { firstBy:'Mike Jolliff', firstYear:'1997', availability:null, listings:0, avgPrice:0, about:null },
+  'axanthic-mj': { firstBy:'Markus Jayne Ball Pythons', firstYear:'2008', availability:null, listings:0, avgPrice:0, about:null },
+  'bamboo': { firstBy:'EB Noah', firstYear:'2013', availability:'Higher', listings:171, avgPrice:441.29, about:'The Bamboo Ball Python is a colour and pattern altering mutation that can be easily told apart from a Normal Ball Python by the extremely washed away colours and heavy blushing that covers the dorsal stripe.' },
+  'bengal': { firstBy:'NERD', firstYear:'2009', availability:null, listings:0, avgPrice:0, about:null },
+  'black-axanthic': { firstBy:'Vida Preciosa International', firstYear:'2008', availability:'Higher', listings:61, avgPrice:850.56, about:'Like other axanthic traits, Black Axanthic hatchlings are born showing bright silver and black coloration, with the silvers gradually browning out as they mature to adulthood.' },
+  'black-belly': { firstBy:'Outback Reptiles', firstYear:null, availability:null, listings:0, avgPrice:0, about:null },
+  'blackhead': { firstBy:'Ralph Davis Reptiles', firstYear:'2002', availability:'Common', listings:506, avgPrice:560.88, about:'The Black Head Ball Python was first produced by Ralph Davis in 2002. He imported a crusty old male in 1999 that had thick black bands and a black head.' },
+  'black-lace': { firstBy:'Dan Wolfe', firstYear:'2004', availability:null, listings:3, avgPrice:283.33, about:null },
+  'black-pastel': { firstBy:'Gulf Coast Reptiles', firstYear:'2002', availability:null, listings:1031, avgPrice:815.98, about:'While extremely similar to the Cinnamon trait, Black Pastels are a separate lineage with the same manner of co-dominant inheritance. Black Pastels are high contrast animals, with distinct black background coloration and gold or rust colored patterning.' },
+  'blade': { firstBy:'Markus Jayne Ball Pythons', firstYear:'2002', availability:'Higher', listings:228, avgPrice:452.39, about:'The Blade Ball Python is a colour and pattern altering mutation easily told apart from a Normal by the bright colouration and large blank alien heads.' },
+  'bongo': { firstBy:'EB Noah', firstYear:'2012', availability:'Higher', listings:150, avgPrice:532.45, about:'Bongo is an incomplete dominant trait first produced by EB Noah in 2012.' },
+  'brown-back': { firstBy:'Joe Compel', firstYear:null, availability:null, listings:0, avgPrice:0, about:null },
+  'cafe': { firstBy:'NorthWest Reptiles', firstYear:'2013', availability:null, listings:0, avgPrice:0, about:null },
+  'calico': { firstBy:'NERD', firstYear:'2002', availability:'Common', listings:372, avgPrice:523.92, about:'The Calico Ball Python is a colour and pattern altering mutation easily told apart from a Normal by its extreme contrasting colours, golden alien head outlines and splashes of white pigmentation.' },
+  'candy': { firstBy:'Outback Reptiles', firstYear:'2008', availability:'Common', listings:149, avgPrice:474.85, about:'The Candy Ball Python is a colour altering mutation that reduces dark pigmentation, leaving high contrasting combinations of yellow, orange and purplish hues. Areas where melanin would normally be present are instead a lilac pink color which develops as the snake matures.' },
+  'caramel-albino': { firstBy:'NERD', firstYear:'1996', availability:'Rarest', listings:3, avgPrice:176.67, about:'The Caramel Albino is a recessive mutation founded by New England Reptile Distributors in 1996.' },
+  'champagne': { firstBy:'EB Noah', firstYear:'2005', availability:'Higher', listings:155, avgPrice:382.54, about:'The Champagne Ball Python is a colour and pattern altering mutation easily told apart from a Normal by the extreme washed away pattern and dark browns and golds that cover the entire animal.' },
+  'chocolate': { firstBy:'BHB Reptiles', firstYear:'1999', availability:'Common', listings:604, avgPrice:669.28, about:'The Chocolate Ball Python is both a colour and pattern altering morph easily recognisable by deep colouration and the keyhole structure of the alien heads.' },
+  'cinder': { firstBy:'FB Reptiles', firstYear:'2015', availability:null, listings:10, avgPrice:352, about:null },
+  'cinnamon': { firstBy:'Greg Graziani', firstYear:'2002', availability:'Rarest', listings:662, avgPrice:415.97, about:'The Cinnamon Ball Python is an incomplete dominant mutation that alters both color and pattern. The name Cinnamon comes from the deep reds on top of a deep brown background.' },
+  'clown': { firstBy:'VPI', firstYear:'1999', availability:null, listings:10063, avgPrice:892.08, about:'The Clown is a color and pattern mutation that is recessive. This mutation causes a reduced pattern with an insane dark, wide dorsal stripe and a very busy and aberrant head which many say is a bit comical looking. The original wild-caught had a small dark marking beneath the eye resembling a clown tear.' },
+  'coffee': { firstBy:'NERD', firstYear:'2012', availability:null, listings:1, avgPrice:500, about:null },
+  'confusion': { firstBy:'Austrian Reptiles & Stefan Wieser', firstYear:'2012', availability:null, listings:197, avgPrice:1185.16, about:null },
+  'congo': { firstBy:null, firstYear:null, availability:null, listings:0, avgPrice:0, about:null },
+  'creed': { firstBy:'Uche Udobi', firstYear:null, availability:null, listings:0, avgPrice:0, about:null },
+  'cryptic': { firstBy:null, firstYear:null, availability:'Common', listings:310, avgPrice:977.48, about:'The Cryptic mutation is a recessive trait.' },
+  'cypress': { firstBy:'Outback Reptiles', firstYear:'2012', availability:'Common', listings:504, avgPrice:789.32, about:'The Cypress Ball Python is an incomplete dominant mutation founded by Outback Reptiles in 2012 that alters both colour and pattern.' },
+  'desert-ghost': { firstBy:'Reptile Industries', firstYear:'2003', availability:'Common', listings:2216, avgPrice:932.83, about:'The Desert Ghost Ball Python is a recessive, color and pattern-altering mutation with several distinct lines. Most lines are known to be compatible with one another, whereas others such as Sahara DG are incompatible.' },
+  'disco': { firstBy:'Ted Thompson', firstYear:'2004', availability:'Higher', listings:126, avgPrice:515.51, about:'Disco is an incomplete dominant mutation founded by Ted Thompson in 2004.' },
+  'dot': { firstBy:'Benfis Exotics', firstYear:'2009', availability:null, listings:1, avgPrice:550, about:null },
+  'enchi': { firstBy:'Sweball', firstYear:'2002', availability:'Common', listings:3561, avgPrice:673.73, about:'The Enchi Ball Python is a colour and pattern altering morph which subtly increases the orange colouration and bright side patterns. The name comes from the region in Africa where they were first discovered.' },
+  'epic': { firstBy:'Tom Baker', firstYear:null, availability:null, listings:1, avgPrice:400, about:null },
+  'exo-lbb': { firstBy:'Exocrawlers', firstYear:'2006', availability:null, listings:0, avgPrice:0, about:null },
+  'fader': { firstBy:'NERD', firstYear:null, availability:null, listings:19, avgPrice:419.74, about:null },
+  'fire': { firstBy:'Debated', firstYear:'2003–2005', availability:'Common', listings:2058, avgPrice:729.11, about:'The Fire Ball Python is known as a colour enhancing morph used in many combos to clean up patterns and make colours more vibrant. By adulthood the browns become more yellow and they can easily be told apart from Normals.' },
+  'flame': { firstBy:'Amir Soleymani', firstYear:null, availability:null, listings:16, avgPrice:8909.38, about:null },
+  'fusion': { firstBy:'The Florida Reptile Ranch', firstYear:'2016', availability:null, listings:199, avgPrice:1174.83, about:null },
+  'genetic-black-back': { firstBy:null, firstYear:null, availability:null, listings:1, avgPrice:300, about:null },
+  'genetic-stripe': { firstBy:'VPI', firstYear:'1999', availability:null, listings:448, avgPrice:698.54, about:null },
+  'genex': { firstBy:'J. Kobylka Reptiles', firstYear:'2015', availability:null, listings:48, avgPrice:448.29, about:null },
+  'ghi': { firstBy:'Matt Lerer', firstYear:'2007', availability:'Common', listings:987, avgPrice:536.1, about:'The GHI Ball Python is easily recognizable by its extremely dark puzzle pattern and strong golden alien heads. First proved genetic by Matt Lerer after finding three identical and unusual Ball Pythons in a shipment of imported animals.' },
+  'glossy': { firstBy:'Andre Mondin', firstYear:'2012', availability:null, listings:0, avgPrice:0, about:null },
+  'granite': { firstBy:'Ralph Davis Reptiles', firstYear:'2003', availability:null, listings:0, avgPrice:0, about:null },
+  'gravel': { firstBy:'The Animal Company', firstYear:'2006', availability:'Common', listings:406, avgPrice:540.64, about:'The Gravel Ball Python is both a color and pattern mutation that has similar characteristics as other genes in the superstripe complex so much that they can be difficult to differentiate from each other.' },
+  'grim': { firstBy:'Tropical Hut', firstYear:'2016', availability:null, listings:51, avgPrice:803.92, about:null },
+  'harlequin': { firstBy:null, firstYear:null, availability:null, listings:28, avgPrice:427.82, about:null },
+  'het-daddy': { firstBy:'Ralph Davis Reptiles', firstYear:null, availability:null, listings:3, avgPrice:208.33, about:null },
+  'hidden-gene-woma': { firstBy:'NERD', firstYear:'1999', availability:'Higher', listings:48, avgPrice:369.79, about:'The Hidden Gene Woma Ball Python is suspected, yet unproven, to be part of the Spider Complex. Despite its name it does not actually contain any hidden genes and is a completely separate mutation to the Woma Ball Python.' },
+  'honey': { firstBy:null, firstYear:null, availability:null, listings:15, avgPrice:487.93, about:null },
+  'huffman': { firstBy:'Chris Huffman', firstYear:null, availability:null, listings:40, avgPrice:307.88, about:null },
+  'hydra': { firstBy:'Ben Renick', firstYear:null, availability:null, listings:7, avgPrice:728.57, about:null },
+  'hypo': { firstBy:'NERD', firstYear:'1994', availability:'Rarest', listings:3506, avgPrice:999.19, about:'The Hypo ball python is a recessive mutation known to become more attractive with age. Its pale scale colouration gives it a look of constantly being in shed. Ghost are hypomelanistic — not a true ghost by definition, which is axanthic x hypo (double recessive designer morph).' },
+  'jaguar': { firstBy:null, firstYear:null, availability:null, listings:32, avgPrice:2366.13, about:null },
+  'java': { firstBy:'Markus Jayne Ball Pythons', firstYear:'2011', availability:null, listings:13, avgPrice:1508.85, about:null },
+  'jedi': { firstBy:'John Berry', firstYear:'2006', availability:null, listings:12, avgPrice:754.08, about:null },
+  'jolt': { firstBy:'Outback Reptiles', firstYear:'2003', availability:null, listings:8, avgPrice:306.25, about:null },
+  'joppa': { firstBy:'Ben Renick', firstYear:'2009', availability:null, listings:0, avgPrice:0, about:null },
+  'jungle-woma': { firstBy:'ECRExchange and KSC Exotics', firstYear:'2005', availability:null, listings:12, avgPrice:262.92, about:null },
+  'kosmos': { firstBy:'RSReptiles', firstYear:'2012', availability:null, listings:10, avgPrice:18222.22, about:null },
+  'lace': { firstBy:'CV Exotics inc', firstYear:'2002', availability:'Common', listings:341, avgPrice:1222.25, about:'Lace is an incomplete dominant mutation founded by CV Exotics inc in 2002.' },
+  'lavender-albino': { firstBy:'Ralph Davis Reptiles', firstYear:'2001', availability:'Common', listings:346, avgPrice:566.81, about:'Lavender Albino and Albino are separate genetic lines. Breeding them together produces double heterozygous offspring, with none visually expressing both genes. Lavenders show a lavender coloration.' },
+  'lc-black-magic': { firstBy:'Lutz and Christine', firstYear:'2012', availability:null, listings:0, avgPrice:0, about:null },
+  'lemonback': { firstBy:'Pro Exotics', firstYear:null, availability:null, listings:0, avgPrice:0, about:null },
+  'leopard': { firstBy:'Peter Kahl Reptiles', firstYear:'2005', availability:'Rarest', listings:2540, avgPrice:752.81, about:'The Leopard Ball Python is a pattern and colouration altering mutation known to enhance the colour of combo offspring. For years, many breeders believed that all Leopard Ball Pythons were het for Piebald, though this has since been disproved.' },
+  'lesser': { firstBy:'Ralph Davis Reptiles', firstYear:'2001', availability:'Rarest', listings:813, avgPrice:523.65, about:'The Lesser is an incomplete dominant morph known for its rich golds, yellows, and warm browns contrasted against heavy blushing and a clean belly. Its super form is a Blue-Eyed Leucistic (BEL), often exhibiting minor physical quirks like bug eyes.' },
+  'mahogany': { firstBy:'Amir Soleymani', firstYear:'2005', availability:null, listings:424, avgPrice:608.3, about:null },
+  'mario': { firstBy:'Sabala Serpents and Mike Wonka', firstYear:'2012', availability:null, listings:18, avgPrice:1550, about:null },
+  'mocha': { firstBy:'Amir Soleymani', firstYear:null, availability:null, listings:18, avgPrice:311.39, about:null },
+  'mojave': { firstBy:'The Snake Keeper', firstYear:'2000', availability:null, listings:1218, avgPrice:650.3, about:'The Mojave is an incomplete dominant mutation that produces a Ball Python with various shades of browns, vibrant yellows, deep blacks, blue-grey body color and creamy highlights. Mojaves are typically easy to recognize by the distinctive Mojave Pattern.' },
+  'monarch': { firstBy:'Rance Meier', firstYear:null, availability:null, listings:144, avgPrice:1288.88, about:null },
+  'monsoon': { firstBy:'Dave Green', firstYear:'2017', availability:null, listings:391, avgPrice:2295.1, about:null },
+  'nova': { firstBy:'Dan Wolfe', firstYear:'2010', availability:null, listings:5, avgPrice:1150, about:null },
+  'nr-mandarin': { firstBy:'Nuyten Reptiles', firstYear:null, availability:null, listings:81, avgPrice:1657.99, about:null },
+  'nyala': { firstBy:'Rassie Erasmus and Wally van der Walt', firstYear:'2013', availability:null, listings:23, avgPrice:797.83, about:null },
+  'ofy': { firstBy:'Randy Foster', firstYear:'2010', availability:null, listings:0, avgPrice:0, about:null },
+  'orange-crush': { firstBy:'Mike Wilbanks', firstYear:'2008', availability:null, listings:27, avgPrice:322, about:null },
+  'orange-dream': { firstBy:'OzzyBoids', firstYear:'2004', availability:null, listings:1461, avgPrice:645.57, about:null },
+  'orange-ghost': { firstBy:null, firstYear:null, availability:null, listings:98, avgPrice:356.65, about:null },
+  'orbit': { firstBy:'Philipp & Reinhold Danch', firstYear:'2016', availability:null, listings:4, avgPrice:1250, about:null },
+  'pastel': { firstBy:'Greg Graziani, NERD', firstYear:'1994', availability:'Common', listings:6002, avgPrice:687.42, about:'The Pastel Ball Python is a pattern changer and colour enhancer easily told apart from a Normal by the high contrast yellows throughout its body and the hook and ringed shaped alien heads. Pastels also tend to have green eyes.' },
+  'patternless': { firstBy:'VPI', firstYear:null, availability:null, listings:1, avgPrice:15000, about:null },
+  'phantom': { firstBy:'Ralph Davis Reptiles', firstYear:'2005', availability:null, listings:163, avgPrice:510.26, about:null },
+  'pied': { firstBy:'Peter Kahl Reptiles', firstYear:'1997', availability:null, listings:0, avgPrice:0, about:'Piebald is a recessive trait that is partially un-pigmented with variable color and pattern mutations. The amount of white is not indicative of its parents\' color — a 90% white piebald bred with a 90% piebald may not produce 90% white offspring.' },
+  'pinstripe': { firstBy:'BHB Enterprises', firstYear:'2001', availability:null, listings:0, avgPrice:0, about:null },
+  'quake': { firstBy:'Dan Wolfe', firstYear:'2012', availability:null, listings:4, avgPrice:287.5, about:null },
+  'rainbow': { firstBy:'Herman-van-Hellem', firstYear:'2015', availability:null, listings:64, avgPrice:1174.3, about:null },
+  'raven': { firstBy:'Ben Cole', firstYear:'2011', availability:null, listings:13, avgPrice:591.54, about:null },
+  'reaper': { firstBy:'Bill Buchman', firstYear:'2009', availability:null, listings:6, avgPrice:1183.33, about:null },
+  'red-gene': { firstBy:null, firstYear:null, availability:null, listings:48, avgPrice:438.29, about:null },
+  'red-stripe': { firstBy:'Outback Reptiles', firstYear:null, availability:null, listings:413, avgPrice:653.25, about:null },
+  'red-axanthic': { firstBy:'Corey Woods', firstYear:'2001', availability:null, listings:33, avgPrice:397.5, about:null },
+  'redhead': { firstBy:'The Mad Baller', firstYear:'2013', availability:null, listings:107, avgPrice:1140.58, about:null },
+  'sable': { firstBy:'Eric Burkett', firstYear:'2002', availability:null, listings:41, avgPrice:359.68, about:null },
+  'sahara': { firstBy:'EB Noah', firstYear:null, availability:null, listings:2, avgPrice:1750, about:null },
+  'sandblast': { firstBy:'Brandon Osborne', firstYear:null, availability:null, listings:28, avgPrice:608.57, about:null },
+  'sapphire': { firstBy:'Matthew Thompson', firstYear:'2009', availability:null, listings:5, avgPrice:401.2, about:null },
+  'satin': { firstBy:'Mike Jones Reptiles', firstYear:null, availability:null, listings:2, avgPrice:275, about:null },
+  'scaleless-head': { firstBy:'BHB Enterprises', firstYear:'2010', availability:null, listings:45, avgPrice:369.29, about:null },
+  'shatter': { firstBy:null, firstYear:null, availability:null, listings:6, avgPrice:1170.83, about:null },
+  'shrapnel': { firstBy:'Chad Hulker', firstYear:null, availability:null, listings:15, avgPrice:1205.67, about:null },
+  'shredder': { firstBy:'Daniel Shahan', firstYear:'2014', availability:null, listings:7, avgPrice:1085.57, about:null },
+  'spark': { firstBy:'Amir Soleymani', firstYear:null, availability:null, listings:62, avgPrice:359.55, about:null },
+  'special': { firstBy:'Tom Baker', firstYear:null, availability:null, listings:270, avgPrice:888.6, about:null },
+  'specter': { firstBy:null, firstYear:null, availability:null, listings:143, avgPrice:390.38, about:null },
+  'spider': { firstBy:'NERD', firstYear:'1999', availability:null, listings:280, avgPrice:329.31, about:null },
+  'splash': { firstBy:'Karsten Kamke', firstYear:'2007', availability:null, listings:0, avgPrice:0, about:null },
+  'splatter': { firstBy:'Chris Jones Reptiles', firstYear:'2012', availability:null, listings:1, avgPrice:75, about:null },
+  'spotnose': { firstBy:'VPI', firstYear:'2005', availability:null, listings:1342, avgPrice:975.63, about:null },
+  'stranger': { firstBy:'IRES Reptiles', firstYear:'2012', availability:null, listings:401, avgPrice:1078.72, about:null },
+  'sulfur': { firstBy:null, firstYear:null, availability:null, listings:23, avgPrice:359.43, about:null },
+  'sunrise': { firstBy:'Lutz and Christine', firstYear:'2018', availability:null, listings:1, avgPrice:0, about:null },
+  'taronja': { firstBy:'Freek Nuyt', firstYear:'2006', availability:null, listings:0, avgPrice:0, about:null },
+  'tri-stripe': { firstBy:'The Snake Keeper', firstYear:null, availability:null, listings:111, avgPrice:508.86, about:null },
+  'trident': { firstBy:'Amir Soleymani', firstYear:'2012', availability:null, listings:2, avgPrice:3275, about:null },
+  'twister': { firstBy:'Karsten Kamke', firstYear:'2012', availability:null, listings:7, avgPrice:1071.43, about:null },
+  'vanilla': { firstBy:null, firstYear:null, availability:null, listings:535, avgPrice:611.84, about:null },
+  'web': { firstBy:'The Florida Reptile Ranch', firstYear:null, availability:null, listings:0, avgPrice:0, about:null },
+  'whitewash': { firstBy:'Nuyten Reptiles', firstYear:'2008', availability:null, listings:0, avgPrice:0, about:null },
+  'woma': { firstBy:'NERD', firstYear:null, availability:null, listings:79, avgPrice:330.68, about:null },
+  'wookie': { firstBy:'The Herp Vault', firstYear:'2013', availability:null, listings:182, avgPrice:973.75, about:null },
+  'x-treme': { firstBy:'Ken Macek', firstYear:'2009', availability:null, listings:8, avgPrice:584.38, about:null },
+  'yellow-belly': { firstBy:'Amir Soleymani', firstYear:'1999', availability:null, listings:1160, avgPrice:512.07, about:null },
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════════════ */
+const parents = { 1:{}, 2:{} };
+let libFilter = 'all';
+let libTarget = 1;
+
+/* ═══════════════════════════════════════════════════════════════════
+   TYPEAHEAD
+═══════════════════════════════════════════════════════════════════ */
+const selectedGene = {1:null, 2:null};
+
+function initTypeaheads() {
+  [1,2].forEach(p => {
+    const input = document.getElementById(`ta-input-${p}`);
+    const dd    = document.getElementById(`ta-drop-${p}`);
+    let hi = -1;
+
+    function opts(q) {
+      const lq = q.trim().toLowerCase();
+      return Object.entries(GENES)
+        .filter(([,g]) => !lq || g.name.toLowerCase().includes(lq))
+        .sort((a,b) => {
+          const as = a[1].name.toLowerCase().startsWith(lq);
+          const bs = b[1].name.toLowerCase().startsWith(lq);
+          if (as && !bs) return -1;
+          if (!as && bs) return  1;
+          return a[1].name.localeCompare(b[1].name);
+        })
+        .slice(0, 60);
+    }
+
+    function renderDrop(q) {
+      hi = -1;
+      const list = opts(q);
+      if (!list.length) {
+        dd.innerHTML = '<div class="ta-empty">No genes found</div>';
+        return;
+      }
+      dd.innerHTML = list.map(([id,g]) => `
+        <div class="ta-opt" data-id="${id}">
+          <span class="ta-opt-name">${g.name}</span>
+          <span class="ta-opt-badge ${g.type}">${g.type==='recessive'?'Rec.':g.type==='dominant'?'CoDom.':'IncDom.'}</span>
+        </div>`).join('');
+      dd.querySelectorAll('.ta-opt').forEach(el => {
+        el.addEventListener('mousedown', e => { e.preventDefault(); pick(el.dataset.id); });
+      });
+    }
+
+    function pick(id) {
+      selectedGene[p] = id;
+      input.value = GENES[id].name;
+      dd.classList.remove('open');
+      hi = -1;
+    }
+
+    input.addEventListener('focus', () => { renderDrop(input.value); dd.classList.add('open'); });
+    input.addEventListener('input', () => { selectedGene[p]=null; renderDrop(input.value); dd.classList.add('open'); });
+    input.addEventListener('blur',  () => setTimeout(() => dd.classList.remove('open'), 150));
+    input.addEventListener('keydown', e => {
+      const items = [...dd.querySelectorAll('.ta-opt')];
+      if (e.key==='ArrowDown') { e.preventDefault(); hi=Math.min(hi+1,items.length-1); }
+      else if (e.key==='ArrowUp') { e.preventDefault(); hi=Math.max(hi-1,0); }
+      else if (e.key==='Enter')  { e.preventDefault(); if (hi>=0) pick(items[hi].dataset.id); else if(items[0]) pick(items[0].dataset.id); return; }
+      else if (e.key==='Escape') { dd.classList.remove('open'); return; }
+      items.forEach((el,i) => el.classList.toggle('hi', i===hi));
+      if (items[hi]) items[hi].scrollIntoView({block:'nearest'});
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GENE TAG MANAGEMENT
+═══════════════════════════════════════════════════════════════════ */
+function addGene(p) {
+  const geneId = selectedGene[p];
+  const copies = parseInt(document.getElementById(`p${p}copies`).value);
+  if (!geneId) return;
+  const g = GENES[geneId];
+  if (g.combo) {
+    const counts = {};
+    g.combo.forEach(id => { counts[id] = (counts[id]||0) + 1; });
+    Object.entries(counts).forEach(([id, n]) => { parents[p][id] = n; });
+  } else {
+    parents[p][geneId] = copies;
+  }
+  renderTags(p);
+  flash(p);
+  document.getElementById(`ta-input-${p}`).value = '';
+  selectedGene[p] = null;
+}
+
+function removeGene(p, id) {
+  delete parents[p][id];
+  renderTags(p);
+}
+
+function renderTags(p) {
+  const wrap = document.getElementById(`p${p}tags`);
+  wrap.innerHTML = '';
+  Object.entries(parents[p]).forEach(([id,copies]) => {
+    const g = GENES[id];
+    let label = g.type==='recessive'
+      ? (copies===2 ? `Visual ${g.name}` : `Het ${g.name}`)
+      : (copies===2 ? `Super ${g.name}` : g.name);
+    const tag = document.createElement('div');
+    tag.className = `gene-tag ${g.type==='dominant'?'codominant':g.type}`;
+    tag.innerHTML = `<span>${label}</span><span class="tag-copies">${copies}×</span><button class="tag-remove" onclick="removeGene(${p},'${id}')">×</button>`;
+    wrap.appendChild(tag);
+  });
+}
+
+function flash(p) {
+  const card = document.getElementById(`p${p}card`);
+  card.classList.add('flash');
+  setTimeout(()=>card.classList.remove('flash'), 600);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GENETICS ENGINE
+═══════════════════════════════════════════════════════════════════ */
+
+// Derive the two alleles a parent carries at a complex locus.
+// Each gene's copy count fills allele slots (max 2).
+function getComplexAlleles(p, cid) {
+  const cx = COMPLEXES[cid];
+  const alleles = [null, null];
+  let slot = 0;
+  for (const gid of cx.genes) {
+    const copies = parents[p][gid] || 0;
+    for (let i = 0; i < copies && slot < 2; i++, slot++) {
+      alleles[slot] = gid;
+    }
+  }
+  return alleles;
+}
+
+// Cross two parents' allele pairs at a single locus.
+// Returns [{alleles:[a,b], prob}], duplicates merged.
+function crossComplexLocus(a1, a2) {
+  const combos = {};
+  for (const x of a1) {
+    for (const y of a2) {
+      // Normalize pair so [A,B] and [B,A] merge
+      const pair = [x, y].sort((a, b) => {
+        if (a === b) return 0;
+        if (a === null) return -1;
+        if (b === null) return 1;
+        return a < b ? -1 : 1;
+      });
+      const key = `${pair[0]}||${pair[1]}`;
+      combos[key] = (combos[key] || 0) + 0.25;
+    }
+  }
+  return Object.entries(combos).map(([key, prob]) => {
+    const parts = key.split('||');
+    return { alleles: [parts[0]==='null'?null:parts[0], parts[1]==='null'?null:parts[1]], prob };
+  });
+}
+
+function crossLocus(p1, p2) {
+  // p1/p2 = 0,1,2 copies
+  const a1 = p1===0?[0,0]:p1===1?[0,1]:[1,1];
+  const a2 = p2===0?[0,0]:p2===1?[0,1]:[1,1];
+  const res = {};
+  for (const x of a1) for (const y of a2) {
+    const s = x+y;
+    res[s] = (res[s]||0) + 0.25;
+  }
+  return Object.entries(res).map(([c,pr])=>({copies:+c, prob:+pr}));
+}
+
+function calcOffspring() {
+  const allIds = new Set([...Object.keys(parents[1]), ...Object.keys(parents[2])]);
+  let outcomes = [{genes:{}, prob:1.0}];
+
+  // Process allelic complex loci first (genes sharing a chromosomal locus)
+  const usedComplexes = new Set();
+  for (const id of allIds) {
+    const cid = GENE_COMPLEX[id];
+    if (cid && !usedComplexes.has(cid)) {
+      usedComplexes.add(cid);
+      const a1 = getComplexAlleles(1, cid);
+      const a2 = getComplexAlleles(2, cid);
+      const dist = crossComplexLocus(a1, a2);
+      const next = [];
+      for (const out of outcomes) {
+        for (const {alleles, prob} of dist) {
+          next.push({genes:{...out.genes, [`_cx_${cid}`]: alleles}, prob: out.prob * prob});
+        }
+      }
+      outcomes = next;
+    }
+  }
+
+  // Process independent genes (not in any complex)
+  for (const id of allIds) {
+    if (GENE_COMPLEX[id]) continue;
+    const p1 = parents[1][id]||0;
+    const p2 = parents[2][id]||0;
+    const dist = crossLocus(p1, p2);
+    const next = [];
+    for (const out of outcomes) {
+      for (const {copies, prob} of dist) {
+        next.push({genes:{...out.genes, [id]:copies}, prob:out.prob*prob});
+      }
+    }
+    outcomes = next;
+  }
+
+  return outcomes.filter(o=>o.prob>0.00001);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   HET CERTAINTY
+═══════════════════════════════════════════════════════════════════ */
+function hetCertainty(p1, p2) {
+  if (p1===2 || p2===2) return '100%';          // visual parent → all hets guaranteed
+  if (p1===1 && p2===1)  return '66%';           // het × het → 2/3 of normals are het
+  if ((p1===1) !== (p2===1)) return '50%';       // het × normal
+  return null;
+}
+
+// Module-level so simulateClutch can reuse it
+let _hetCerts = {};
+
+function labelOutcome(genes, hetCerts) {
+  if (!hetCerts) hetCerts = _hetCerts;
+  const visuals=[], hets=[], flags=[];
+
+  for (const [id, val] of Object.entries(genes)) {
+
+    // ── Complex locus outcomes ──────────────────────────────────────
+    if (id.startsWith('_cx_')) {
+      const cid = id.slice(4);
+      const [a, b] = val; // two alleles (gene id or null)
+      if (!a && !b) continue;
+
+      if (cid === 'bel') {
+        if (!a || !b) {
+          visuals.push({label: GENES[a||b].name, cls: 'visual'});
+        } else if (a === b) {
+          visuals.push({label: `Super ${GENES[a].name}`, cls: 'super'});
+        } else {
+          visuals.push({label: `✨ Blue-Eyed Leucistic (${GENES[a].name} + ${GENES[b].name})`, cls: 'bel'});
+        }
+
+      } else if (cid === 'blk') {
+        if (!a && !b) {
+          // no alleles
+        } else if (!a || !b) {
+          visuals.push({label: GENES[a||b].name, cls: 'visual'});
+        } else if (a === b) {
+          visuals.push({label: `🖤 Black Eyed Lucy (Super ${GENES[a].name})`, cls: 'bel'});
+        } else {
+          visuals.push({label: `🖤 Black Eyed Lucy (${GENES[a].name} + ${GENES[b].name})`, cls: 'bel'});
+        }
+
+      } else if (cid === 'spider') {
+        const LETHAL = new Set(['spider','champagne']);
+        if (!a && !b) {
+          // no alleles
+        } else if (!a || !b) {
+          const gid = a || b;
+          visuals.push({label: GENES[gid].name, cls: 'visual'});
+          if (GENES[gid].health) flags.push(GENES[gid].health);
+        } else if (a === b) {
+          if (LETHAL.has(a)) {
+            visuals.push({label: `Super ${GENES[a].name} ☠️ (Lethal)`, cls: 'super'});
+            flags.push(GENES[a].health || `Super ${GENES[a].name} is non-viable.`);
+          } else {
+            visuals.push({label: `Super ${GENES[a].name}`, cls: 'super'});
+            if (GENES[a].health) flags.push(GENES[a].health);
+          }
+        } else {
+          visuals.push({label: `${GENES[a].name} / ${GENES[b].name}`, cls: 'super'});
+          if (GENES[a].health) flags.push(GENES[a].health);
+          if (GENES[b].health) flags.push(GENES[b].health);
+        }
+
+      } else if (cid === 'yb') {
+        if (!a && !b) {
+        } else if (!a || !b) {
+          visuals.push({label: GENES[a||b].name, cls: 'visual'});
+        } else if (a === b) {
+          const lbl = a === 'yellow-belly' ? '✨ Ivory (YB/YB)' : `Super ${GENES[a].name}`;
+          visuals.push({label: lbl, cls: 'super'});
+        } else {
+          const NAMED_YB = { 'specter|yellow-belly': '✨ Super Stripe' };
+          const key = [a, b].sort().join('|');
+          const lbl = NAMED_YB[key] || `${GENES[a].name} / ${GENES[b].name}`;
+          visuals.push({label: lbl, cls: NAMED_YB[key] ? 'super' : 'visual'});
+        }
+
+      } else if (cid === '8ball') {
+        if (!a && !b) {
+          // no alleles — skip
+        } else if (!a || !b) {
+          const gid = a || b;
+          visuals.push({label: GENES[gid].name, cls: 'visual'});
+          if (GENES[gid].health) flags.push(GENES[gid].health);
+        } else if (a === b) {
+          visuals.push({label: `Super ${GENES[a].name}`, cls: 'super'});
+          if (GENES[a].health) flags.push(GENES[a].health);
+        } else {
+          const NAMED = { 'black-pastel|cinnamon': 'Cinnamon Black Pastel' };
+          const key = [a, b].sort().join('|');
+          visuals.push({label: NAMED[key] || `${GENES[a].name} / ${GENES[b].name}`, cls: 'super'});
+        }
+
+      } else if (cid === 'albino') {
+        if (!a && !b) {
+        } else if (!a || !b) {
+          hets.push({label: `Het ${GENES[a||b].name}`, cls: 'het'});
+        } else if (a === b) {
+          visuals.push({label: `Visual ${GENES[a].name}`, cls: 'visual'});
+          if (GENES[a].health) flags.push(GENES[a].health);
+        } else {
+          visuals.push({label: '✨ Candino (Albino / Candy)', cls: 'visual'});
+        }
+
+      } else if (cid === 'crypton') {
+        if (!a && !b) {
+          // no alleles
+        } else if (!a || !b) {
+          hets.push({label: `Het ${GENES[a||b].name}`, cls: 'het'});
+        } else if (a === b) {
+          visuals.push({label: `Visual ${GENES[a].name}`, cls: 'visual'});
+        } else {
+          visuals.push({label: '✨ Crypton (Clown / Cryptic)', cls: 'visual'});
+        }
+
+      } else if (cid === 'tplus') {
+        if (!a && !b) {
+          // no alleles
+        } else if (!a || !b) {
+          hets.push({label: `Het ${GENES[a||b].name}`, cls: 'het'});
+        } else if (a === b) {
+          visuals.push({label: `Visual ${GENES[a].name}`, cls: 'visual'});
+          if (GENES[a].health) flags.push(GENES[a].health);
+        } else {
+          visuals.push({label: `T+ Albino (${GENES[a].name} / ${GENES[b].name})`, cls: 'visual'});
+        }
+      }
+      continue;
+    }
+
+    // ── Regular (independent) genes ────────────────────────────────
+    const copies = val;
+    const g = GENES[id];
+    if (!g || copies===0) continue;
+
+    if (g.type==='recessive') {
+      if (copies===2) {
+        visuals.push({label:`Visual ${g.name}`, cls:'visual'});
+        if (g.health) flags.push(g.health);
+      } else {
+        const cert = hetCerts[id];
+        const prefix = cert ? `${cert} ` : '';
+        hets.push({label:`${prefix}Het ${g.name}`, cls:'het'});
+      }
+    } else if (g.type==='dominant') {
+      if (copies===2) {
+        visuals.push({label:`Super ${g.name}`, cls:'super'});
+        if (g.health) flags.push(`${g.name}: ${g.health}`);
+      } else {
+        visuals.push({label:g.name, cls:'visual'});
+        if (g.health) flags.push(`${g.name}: ${g.health}`);
+      }
+    } else {
+      // codominant / incomplete dominant
+      if (copies===2) {
+        visuals.push({label:`Super ${g.name}`, cls:'super'});
+        if (g.health) flags.push(`${g.name}: ${g.health}`);
+      } else {
+        visuals.push({label:g.name, cls:'visual'});
+        if (g.health) flags.push(`${g.name}: ${g.health}`);
+      }
+    }
+  }
+
+  const isNormal = visuals.length===0 && hets.length===0;
+  return {visuals, hets, flags, isNormal};
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CALCULATE HANDLER
+═══════════════════════════════════════════════════════════════════ */
+function runCalc() {
+  const total = Object.keys(parents[1]).length + Object.keys(parents[2]).length;
+  if (total===0) {
+    alert('Please add at least one gene to either parent first.');
+    return;
+  }
+
+  const outcomes = calcOffspring();
+  outcomes.sort((a,b)=>b.prob-a.prob);
+  const maxProb = outcomes[0]?.prob || 1;
+
+  // Build het certainty map
+  const allIds = new Set([...Object.keys(parents[1]), ...Object.keys(parents[2])]);
+  _hetCerts = {};
+  for (const id of allIds) {
+    const g = GENES[id];
+    if (g && g.type==='recessive') {
+      const cert = hetCertainty(parents[1][id]||0, parents[2][id]||0);
+      if (cert) _hetCerts[id] = cert;
+    }
+  }
+
+  // Show clutch panel
+  document.getElementById('clutch-panel').classList.add('visible');
+  document.getElementById('clutch-results').innerHTML = '';
+
+  // Collect warnings
+  const lethalWarns = [];
+  for (const id of LETHAL_SUPER) {
+    const p1 = parents[1][id]||0, p2 = parents[2][id]||0;
+    if (p1>=1 && p2>=1) lethalWarns.push(id);
+  }
+  // BEL warning if 2+ BEL genes but only 1 from each parent (no lethal, just info)
+
+  // Count visual outcomes
+  const visualCount = outcomes.filter(o=>{
+    const {visuals,isNormal} = labelOutcome(o.genes);
+    return !isNormal && visuals.length>0;
+  }).length;
+  const normalCount = outcomes.filter(o=>labelOutcome(o.genes).isNormal).length;
+
+  let html = `<h2>🧬 Offspring Outcomes</h2>`;
+
+  // Meta stats
+  html += `<div class="results-meta">
+    <div class="meta-stat">Combinations: <span>${outcomes.length}</span></div>
+    <div class="meta-stat">Visual outcomes: <span>${visualCount}</span></div>
+    <div class="meta-stat">Normal/het-only: <span>${normalCount}</span></div>
+  </div>`;
+
+  // Warnings section
+  if (lethalWarns.length) {
+    html += `<div class="warnings-section">`;
+    lethalWarns.forEach(id => {
+      html += `<div class="danger-box">🚨 <strong>LETHAL PAIRING:</strong> ${GENES[id].name} × ${GENES[id].name} — ${GENES[id].health}</div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Collect all unique non-lethal health flags
+  const healthSet = new Set();
+  outcomes.forEach(o => {
+    const {flags} = labelOutcome(o.genes);
+    flags.forEach(f => {
+      if (!lethalWarns.some(id => f.includes(GENES[id].name))) healthSet.add(f);
+    });
+  });
+  if (healthSet.size && !lethalWarns.length) {
+    html += `<div class="warnings-section">`;
+    healthSet.forEach(f => { html += `<div class="warn-box">⚠️ ${f}</div>`; });
+    html += `</div>`;
+  }
+
+  // Table
+  html += `<table class="outcomes-table">
+    <thead>
+      <tr>
+        <th class="prob-col">Probability</th>
+        <th>Visual Phenotype</th>
+        <th>Carried Hets</th>
+      </tr>
+    </thead><tbody>`;
+
+  outcomes.forEach(({genes, prob}, i) => {
+    const {visuals, hets, flags, isNormal} = labelOutcome(genes);
+    const pct = (prob*100).toFixed(2);
+    const barW = Math.round((prob/maxProb)*100);
+    const rowCls = i===0 ? 'rank-1' : '';
+
+    let phenotypeHTML = '';
+    if (isNormal) {
+      phenotypeHTML += `<span class="mp normal-pill">Normal</span>`;
+    } else {
+      visuals.forEach(({label,cls}) => {
+        phenotypeHTML += `<span class="mp ${cls}">${label}</span>`;
+      });
+    }
+
+    let hetHTML = hets.map(({label})=>`<span class="mp het">${label}</span>`).join('');
+
+    // Health flag pills (in het column)
+    if (flags.length && !isNormal) {
+      flags.forEach(f => {
+        hetHTML += `<span class="mp flagged">⚠️ ${f.split(':')[0]}</span>`;
+      });
+    }
+
+    html += `<tr class="${rowCls}">
+      <td>
+        <div class="prob-wrap">
+          <div class="prob-bar-bg"><div class="prob-bar-fill" style="width:${barW}%"></div></div>
+          <span class="prob-num">${pct}%</span>
+        </div>
+      </td>
+      <td><div class="morph-pill-row">${phenotypeHTML}</div></td>
+      <td><div class="morph-pill-row">${hetHTML || '<span style="color:var(--muted);font-size:11px">—</span>'}</div></td>
+    </tr>`;
+  });
+
+  html += `</tbody></table>`;
+
+  const panel = document.getElementById('results');
+  panel.innerHTML = html;
+  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CLUTCH SIMULATOR
+═══════════════════════════════════════════════════════════════════ */
+function simulateClutch() {
+  const n = Math.min(Math.max(parseInt(document.getElementById('clutch-n').value)||6, 1), 20);
+  const outcomes = calcOffspring();
+  if (!outcomes.length) return;
+
+  // Build cumulative probability array for weighted random sampling
+  let cum = 0;
+  const cumulative = outcomes.map(o => ({ ...o, cum: cum += o.prob }));
+
+  function rollEgg() {
+    const r = Math.random();
+    return cumulative.find(o => r <= o.cum) || cumulative[cumulative.length-1];
+  }
+
+  const eggs = Array.from({length:n}, rollEgg);
+
+  // Render egg cards
+  let eggsHTML = '<div class="eggs-grid">';
+  eggs.forEach((egg, i) => {
+    const {visuals, hets, isNormal} = labelOutcome(egg.genes);
+    const phenHTML = (isNormal
+      ? '<span class="mp normal-pill">Normal</span>'
+      : visuals.map(({label,cls}) => `<span class="mp ${cls}">${label}</span>`).join(''));
+    const hetHTML = hets.map(({label}) => `<span class="mp het">${label}</span>`).join('');
+    eggsHTML += `<div class="egg-card">
+      <div class="egg-label">Egg ${i+1}</div>
+      <div class="egg-pheno">${phenHTML}</div>
+      ${hetHTML ? `<div class="egg-hets">${hetHTML}</div>` : ''}
+    </div>`;
+  });
+  eggsHTML += '</div>';
+
+  // Build summary — group by visual phenotype key
+  const tally = {};
+  eggs.forEach(egg => {
+    const {visuals, isNormal} = labelOutcome(egg.genes);
+    const key = isNormal ? 'Normal' : visuals.map(v=>v.label).join(' + ');
+    tally[key] = (tally[key]||0) + 1;
+  });
+
+  let sumHTML = '<div class="clutch-summary"><h3>Clutch Summary</h3>';
+  Object.entries(tally).sort((a,b)=>b[1]-a[1]).forEach(([label,count]) => {
+    sumHTML += `<div class="sum-row"><span class="sum-n">${count}</span><span>${label}</span></div>`;
+  });
+  sumHTML += '</div>';
+
+  document.getElementById('clutch-results').innerHTML = eggsHTML + sumHTML;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   QUICK EXAMPLES
+═══════════════════════════════════════════════════════════════════ */
+function loadExample(key) {
+  // Clear
+  parents[1] = {}; parents[2] = {};
+
+  const examples = {
+    clown_het: { p1:{clown:1}, p2:{clown:1} },
+    pastel_super: { p1:{pastel:1}, p2:{pastel:2} },
+    bel_cross: { p1:{mojave:1}, p2:{lesser:1} },
+    pied_clown: { p1:{pied:2, clown:1}, p2:{clown:2, pied:1} },
+  };
+
+  const ex = examples[key];
+  if (!ex) return;
+  Object.assign(parents[1], ex.p1 || {});
+  Object.assign(parents[2], ex.p2 || {});
+  renderTags(1); renderTags(2);
+  runCalc();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GENE LIBRARY
+═══════════════════════════════════════════════════════════════════ */
+function setLibTarget(p) {
+  libTarget = p;
+  document.getElementById('tgt1btn').classList.toggle('active', p===1);
+  document.getElementById('tgt2btn').classList.toggle('active', p===2);
+}
+
+function setFlt(f, btn) {
+  libFilter = f;
+  document.querySelectorAll('.flt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderLib();
+}
+
+function renderLib() {
+  const q = document.getElementById('libsearch').value.toLowerCase();
+  const grid = document.getElementById('libgrid');
+  grid.innerHTML = '';
+
+  const sorted = Object.entries(GENES).sort((a,b)=>a[1].name.localeCompare(b[1].name));
+
+  sorted.forEach(([id, g]) => {
+    if (libFilter==='recessive'  && g.type!=='recessive')  return;
+    if (libFilter==='codominant' && g.type!=='codominant') return;
+    if (libFilter==='dominant'   && g.type!=='dominant')   return;
+    if (libFilter==='complex'    && !GENE_COMPLEX[id] && !g.bel) return;
+    if (libFilter==='health'     && !g.health)             return;
+    if (q && !g.name.toLowerCase().includes(q)) return;
+
+    const card = document.createElement('div');
+    card.className = 'lib-card';
+    card.onclick = () => {
+      parents[libTarget][id] = 1;
+      renderTags(libTarget);
+      flash(libTarget);
+    };
+
+    let badges = '';
+    const cid = GENE_COMPLEX[id];
+    if (cid) {
+      badges += `<span class="badge cx">${COMPLEXES[cid].label}</span>`;
+    } else if (g.bel) {
+      badges += `<span class="badge bel">BEL</span>`;
+    }
+    if (g.health) badges += `<span class="badge health">⚠️ Health</span>`;
+
+    card.innerHTML = `
+      <div class="lib-card-name">${g.name}<button class="lib-card-info" title="Gene info" onclick="event.stopPropagation();showGeneDetail('${id}')">ℹ</button></div>
+      <div class="lib-card-type ${g.type}">${g.type==='recessive'?'Recessive':g.type==='dominant'?'Complete Dominant':'Incomplete Dominant'}</div>
+      ${badges ? `<div class="lib-card-badges">${badges}</div>` : ''}
+    `;
+    grid.appendChild(card);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GENE DETAIL PANEL
+═══════════════════════════════════════════════════════════════════ */
+function showGeneDetail(id) {
+  const g = GENES[id];
+  const m = GENE_META[id] || {};
+  const overlay = document.getElementById('geneDetailOverlay');
+
+  document.getElementById('gdpTitle').textContent = g.name;
+
+  // Badges
+  const badgesEl = document.getElementById('gdpBadges');
+  let badges = '';
+  const typeLabel = g.type==='recessive' ? 'Rec.' : g.type==='dominant' ? 'CoDom.' : 'IncDom.';
+  const typeClass = g.type==='recessive' ? 'recessive' : g.type==='dominant' ? 'dominant' : 'codominant';
+  badges += `<span class="badge" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted)">${typeLabel}</span>`;
+  const cid = GENE_COMPLEX[id];
+  if (cid) badges += `<span class="badge cx">${COMPLEXES[cid].label}</span>`;
+  if (g.health) badges += `<span class="badge health">⚠️ Health</span>`;
+  if (m.availability) {
+    const avCls = m.availability.replace(/\s+/g,'');
+    badges += `<span class="gdp-avail ${avCls}">${m.availability}</span>`;
+  }
+  badgesEl.innerHTML = badges;
+
+  // Price / listings stats
+  const priceRow = document.getElementById('gdpPriceRow');
+  if (m.avgPrice || m.listings) {
+    const price = m.avgPrice ? '$' + m.avgPrice.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}) : '—';
+    const listings = m.listings ? m.listings.toLocaleString() : '—';
+    priceRow.innerHTML = `
+      <div class="gdp-stat">
+        <div class="gdp-stat-val">${price}</div>
+        <div class="gdp-stat-lbl">Avg Price</div>
+      </div>
+      <div class="gdp-stat">
+        <div class="gdp-stat-val" style="color:var(--blue)">${listings}</div>
+        <div class="gdp-stat-lbl">Active Listings</div>
+      </div>`;
+    priceRow.style.display = '';
+  } else {
+    priceRow.style.display = 'none';
+  }
+
+  // About
+  const aboutBlock = document.getElementById('gdpAboutBlock');
+  if (m.about) {
+    aboutBlock.innerHTML = `<div class="gdp-section-label">About</div><div class="gdp-about">${m.about}</div>`;
+  } else if (cid && COMPLEXES[cid].desc) {
+    aboutBlock.innerHTML = `<div class="gdp-section-label">Complex</div><div class="gdp-about">${COMPLEXES[cid].desc}</div>`;
+  } else {
+    aboutBlock.innerHTML = '';
+  }
+
+  // Meta (first produced)
+  const metaBlock = document.getElementById('gdpMetaBlock');
+  let metaHtml = '';
+  if (m.firstBy || m.firstYear) {
+    if (m.firstBy)   metaHtml += `<div class="gdp-meta-row"><span>First produced by</span> <strong>${m.firstBy}</strong></div>`;
+    if (m.firstYear) metaHtml += `<div class="gdp-meta-row"><span>Year</span> <strong>${m.firstYear}</strong></div>`;
+  }
+  metaBlock.innerHTML = metaHtml;
+
+  // Add to parent buttons
+  document.getElementById('gdpAddRow').innerHTML = `
+    <button class="gdp-add-btn" onclick="addFromDetail('${id}',1)">+ Parent 1</button>
+    <button class="gdp-add-btn" onclick="addFromDetail('${id}',2)" style="background:var(--blue);--bg-hover:#79c0ff">+ Parent 2</button>`;
+
+  overlay.classList.add('open');
+}
+
+function addFromDetail(id, p) {
+  parents[p][id] = 1;
+  renderTags(p);
+  flash(p);
+  closeGeneDetail();
+}
+
+function closeGeneDetail(e) {
+  if (e && e.target !== document.getElementById('geneDetailOverlay')) return;
+  document.getElementById('geneDetailOverlay').classList.remove('open');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════════════════════════ */
+function showTab(id) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  document.querySelector(`.tab-btn[onclick="showTab('${id}')"]`).classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════════════════════════════ */
+initTypeaheads();
+renderLib();
+</script>
+</body>
+</html>
