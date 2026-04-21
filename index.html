@@ -1413,6 +1413,13 @@ const GENES = {
   ofy:                { name:'OFY',                   type:'dominant',   bel:false, health:null },
   sapphire:           { name:'Sapphire',              type:'dominant',   bel:false, health:null },
   shrapnel:           { name:'Shrapnel',              type:'codominant', bel:false, health:null },
+
+  // ── 2025 ADDITIONS ─────────────────────────────────────────────────
+  zebra:              { name:'Zebra',                 type:'recessive',  bel:false, health:null },
+  sunset:             { name:'Sunset',                type:'recessive',  bel:false, health:null },
+  toffee:             { name:'Toffee',                type:'recessive',  bel:false, health:null },
+  flare:              { name:'Flare',                 type:'codominant', bel:false, health:null },
+  vudoo:              { name:'Vudoo',                 type:'codominant', bel:false, health:null },
 };
 
 const BEL_SET = new Set(Object.entries(GENES).filter(([,g])=>g.bel).map(([id])=>id));
@@ -1434,7 +1441,7 @@ const COMPLEXES = {
   yb: {
     name: 'Yellow Belly Complex',
     label: 'YB',
-    genes: ['yellow-belly','gravel','specter','spark','asphalt'],
+    genes: ['yellow-belly','gravel','specter','spark','asphalt','flare'],
     baseType: 'codominant',
     desc: 'YB/YB = Ivory. Specter/YB = Super Stripe. Same-gene homo = Super form.',
   },
@@ -1462,9 +1469,9 @@ const COMPLEXES = {
   albino: {
     name: 'Albino Complex',
     label: 'Albino',
-    genes: ['albino','candy'],
+    genes: ['albino','candy','toffee'],
     baseType: 'recessive',
-    desc: 'Albino & Candy are allelic recessives. Compound (one of each) = Candino.',
+    desc: 'Albino, Candy & Toffee are allelic recessives at the TYR locus. Albino + Candy = Candino.',
   },
   crypton: {
     name: 'Crypton (Clown / Cryptic)',
@@ -1479,6 +1486,13 @@ const COMPLEXES = {
     genes: ['caramel-albino','ultramel'],
     baseType: 'recessive',
     desc: 'Caramel Albino & Ultramel share the T+ locus. Compound = T+ Albino phenotype.',
+  },
+  mahogany: {
+    name: 'Mahogany Complex',
+    label: 'Mahogany',
+    genes: ['mahogany','cinder'],
+    baseType: 'codominant',
+    desc: 'Mahogany & Cinder are allelic codominants. Compound (one of each) produces a distinct visual.',
   },
 };
 
@@ -1627,6 +1641,11 @@ const GENE_META = {
   'wookie': { firstBy:'The Herp Vault', firstYear:'2013', availability:null, listings:182, avgPrice:973.75, about:null },
   'x-treme': { firstBy:'Ken Macek', firstYear:'2009', availability:null, listings:8, avgPrice:584.38, about:null },
   'yellow-belly': { firstBy:'Amir Soleymani', firstYear:'1999', availability:null, listings:1160, avgPrice:512.07, about:null },
+  'zebra':   { firstBy:'Adam Chesla & Steve Roussis', firstYear:'2015', availability:'Rare', listings:null, avgPrice:null, about:'Recessive mutation producing bold, high-contrast striped banding with a cream/gold base. Proven in 2015 and steadily growing in the hobby.' },
+  'sunset':  { firstBy:'BHB Reptiles', firstYear:'2012', availability:'Uncommon', listings:null, avgPrice:null, about:'Deep burnt-orange to red coloration that intensifies significantly with age. One of the most striking recessive morphs in the hobby. First produced by Brian Barczyk of BHB Reptiles.' },
+  'toffee':  { firstBy:null, firstYear:null, availability:'Rare', listings:null, avgPrice:null, about:'Allelic with Albino and Candy at the TYR locus. Produces a visual albinism phenotype. Toffee × Albino or Toffee × Candy produces a compound visual animal.' },
+  'flare':   { firstBy:null, firstYear:null, availability:'Rare', listings:null, avgPrice:null, about:'Member of the Yellow Belly allelic complex. Allelic with Yellow Belly, Gravel, Specter, Spark, and Asphalt. Homozygous = Super Flare; compound with YB complex members produces distinct named morphs.' },
+  'vudoo':   { firstBy:'Bob Vu (Bob\'s Balls)', firstYear:'2018', availability:'Rare', listings:null, avgPrice:null, about:'Codominant mutation with a dark Granite-like appearance and distinct striped tail. First produced by Bob Vu from an import. Listed on MorphMarket Morphpedia as a distinct trait.' },
 };
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1950,7 +1969,9 @@ function labelOutcome(genes, hetCerts) {
           visuals.push({label: `Visual ${GENES[a].name}`, cls: 'visual'});
           if (GENES[a].health) flags.push(GENES[a].health);
         } else {
-          visuals.push({label: '✨ Candino (Albino / Candy)', cls: 'visual'});
+          const NAMED_ALBINO = { 'albino|candy': '✨ Candino (Albino / Candy)' };
+          const key = [a,b].sort().join('|');
+          visuals.push({label: NAMED_ALBINO[key] || `✨ ${GENES[a].name} / ${GENES[b].name} (Compound)`, cls: 'visual'});
         }
 
       } else if (cid === 'crypton') {
@@ -1980,6 +2001,16 @@ function labelOutcome(genes, hetCerts) {
           if (GENES[a].health) flags.push(GENES[a].health);
         } else {
           visuals.push({label: `T+ Albino (${GENES[a].name} / ${GENES[b].name})`, cls: 'visual'});
+        }
+
+      } else if (cid === 'mahogany') {
+        if (!a && !b) {
+        } else if (!a || !b) {
+          visuals.push({label: GENES[a||b].name, cls: 'visual'});
+        } else if (a === b) {
+          visuals.push({label: `Super ${GENES[a].name}`, cls: 'super'});
+        } else {
+          visuals.push({label: `${GENES[a].name} / ${GENES[b].name}`, cls: 'super'});
         }
       }
       continue;
